@@ -22,26 +22,24 @@ app.use(API_STRING, subpath);
 
 var petResources = require("./swagger/model_resources");
 
-// configure api subpath
+// configure /api subpath
 subpath.configure(function () {
-  // subpath.use(express.bodyParser());
+  // just using json for the api
   subpath.use(express.json());
-  subpath.use(express.methodOverride());
-  subpath.use(app.router);
 
+  subpath.use(express.methodOverride());
 });
 
-// all environments
 app.configure(function () {
+  // all environments
   app.set('port', PORT);
   // app.set('views', __dirname + '/views');
   // app.set('view engine', 'jade');
-  // app.use(express.favicon());
+  app.use(express.favicon());
   // app.use(express.static(path.join(__dirname, 'public')));
   app.use(express.logger('dev'));
 
-  // app.use(express.bodyParser()); //
-  // app.use(express.urlencoded());
+  // just using json for the api
   app.use(express.json());
 
   app.use(express.methodOverride());
@@ -56,25 +54,13 @@ app.configure(function () {
   // app.locals({
   //   title: 'Node-Neo4j-API'    // default title
   // });
-
-
 });
-
 
 
 // Set the main handler in swagger to the express app
 swagger.setAppHandler(subpath);
 
 swagger.configureSwaggerPaths("", "/api-docs", "");
-
-// default document middleware for swagger/index.html
-// app.use('/swagger', function (req, res, next) {
-//   if (req.url === '/swagger') {
-//     res.redirect('/swagger/');
-//   }
-//   next();
-// });
-
 
 // This is a sample validator.  It simply says that for _all_ POST, DELETE, PUT
 // methods, the header `api_key` OR query param `api_key` must be equal
@@ -138,7 +124,6 @@ app.get(/^\/docs(\/.*)?$/, function(req, res, next) {
 
 // app.post('/users/:id/follow', routes.users.follow);
 // app.post('/users/:id/unfollow', routes.users.unfollow);
-
 
 
 app.listen(app.get('port'), function() {
