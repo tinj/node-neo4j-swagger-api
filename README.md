@@ -1,4 +1,4 @@
-node-neo4j-api-server
+node-neo4j-swagger-api
 =====================
 
 This is an open source node neo4j api server based on node-neo4j-template and swagger-node-express
