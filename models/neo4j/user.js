@@ -1,3 +1,5 @@
+// extracts just the data from the query results
+
 var _ = require('underscore');
 
 var User = module.exports = function (_node) {

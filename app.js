@@ -20,7 +20,7 @@ var express     = require('express')
 
 app.use(API_STRING, subpath);
 
-// configure /api subpath
+// configure /api/v0 subpath for api versioning
 subpath.configure(function () {
   // just using json for the api
   subpath.use(express.json());
@@ -50,12 +50,12 @@ app.configure(function () {
   }
 
   // app.locals({
-  //   title: 'Node-Neo4j-API'    // default title
+  //   title: 'node-neo4j-swagger-api'    // default title
   // });
 });
 
 
-// Set the main handler in swagger to the express app
+// Set the main handler in swagger to the express subpath
 swagger.setAppHandler(subpath);
 
 swagger.configureSwaggerPaths("", "/api-docs", "");
@@ -117,7 +117,10 @@ app.get(/^\/docs(\/.*)?$/, function(req, res, next) {
   return docs_handler(req, res, next);
 });
 
-// app.get('/', routes.site.index);
+// redirect to /docs
+app.get('/', function(req, res) {
+  res.redirect('./docs');
+});
 
 // app.get('/users', routes.users.list);
 // app.post('/users', routes.users.create);
