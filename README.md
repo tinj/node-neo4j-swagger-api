@@ -43,6 +43,14 @@ TODO
 9. ...
 
 
+More details about goals
+So basically, swagger creates interactive api docs, which is great but i also want to see what's going on with neo4j at the same time
+
+the idea is to pass raw query/results optionally in api responses which could be visualized on the swagger client along side the api results
+
+end result being i can see what neo4j and my api are doing side by side in the web client so i can stop debugging in the console
+
+
 
 
 MIT License
