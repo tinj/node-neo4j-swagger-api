@@ -12,11 +12,22 @@ https://github.com/aseemk/node-neo4j-template/
 Swagger-Node-Express
 https://github.com/wordnik/swagger-node-express
 
+Swagger
+https://developers.helloreverb.com/swagger/
+
 graphgist
 https://github.com/neo4j-contrib/graphgist/
 
 
 Built focusing on using Cypher and Neo4j 2.0M06
+
+
+Start
+clone
+npm install
+have a neo4j server up at localhost:7474 or NEO4J_URL specified in .env
+node app.js
+http://localhost:3000/docs
 
 
 TODO
