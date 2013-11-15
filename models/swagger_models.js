@@ -1,4 +1,15 @@
 module.exports = {
+  "Envelope":{
+    "id":"Envelope",
+    "properties":{
+      "response":{
+        "type":"long"
+      },
+      "name":{
+        "type":"string"
+      }
+    }
+  },
   "Category":{
     "id":"Category",
     "properties":{
@@ -46,6 +57,21 @@ module.exports = {
           "type":"string"
         },
         "type":"Array"
+      }
+    }
+  },
+  "User":{
+    "id":"User",
+    // "required": ["id"],
+    "properties":{
+      "uuid":{
+        "type":"string"
+      },
+      "name":{
+        "type":"string"
+      },
+      "created":{
+        "type":"number"
       }
     }
   },

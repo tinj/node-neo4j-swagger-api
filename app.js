@@ -11,7 +11,7 @@ var express     = require('express')
   , routes      = require('./routes')
 
   , PORT        = process.env.PORT || 3000
-  , API_STRING  = '/api'
+  , API_STRING  = '/api/v0'
   , BASE_URL    = process.env.BASE_URL || process.env.BASE_CALLBACK_URL || "http://localhost:"+PORT
 
   , app         = express()
@@ -19,8 +19,6 @@ var express     = require('express')
 
 
 app.use(API_STRING, subpath);
-
-var petResources = require("./swagger/model_resources");
 
 // configure /api subpath
 subpath.configure(function () {
@@ -82,16 +80,21 @@ swagger.addValidator(
 );
 
 
-var models = require("./swagger/models");
+var models = require("./models/swagger_models");
 
 // Add models and methods to swagger
 swagger.addModels(models)
-  .addGet(petResources.findByTags)
-  .addGet(petResources.findByStatus)
-  .addGet(petResources.findById)
-  .addPost(petResources.addPet)
-  .addPut(petResources.updatePet)
-  .addDelete(petResources.deletePet);
+  .addGet(routes.users.list)
+  .addGet(routes.users.findById)
+  .addPost(routes.users.addUser)
+  // .addDelete(routes.users.deleteUser)
+
+  .addGet(routes.pets.findByTags)
+  .addGet(routes.pets.findByStatus)
+  .addGet(routes.pets.findById)
+  .addPost(routes.pets.addPet)
+  .addPut(routes.pets.updatePet)
+  .addDelete(routes.pets.deletePet);
 
 
 // Configures the app's base path and api version.
