@@ -8,11 +8,18 @@ var param = sw.params;
 var url = require("url");
 var swe = sw.errors;
 
-// var userData = require("../routes/users");
-
 function writeResponse (res, data) {
   sw.setHeaders(res);
   res.send(JSON.stringify(data));
+}
+
+function writeResponseEnvelope (res, data) {
+  var envelope = {
+    response: data,
+    extra: 'extra metadata'
+  };
+  sw.setHeaders(res);
+  res.send(JSON.stringify(envelope));
 }
 
 
@@ -73,7 +80,7 @@ exports.addUser = {
 
 
 /**
- * GET /users/:id
+ * GET /users/:uuid
  */
 
 exports.findById = {
@@ -85,14 +92,14 @@ exports.findById = {
     "method": "GET",
     "params" : [param.path("uuid", "ID of user that needs to be fetched", "string")],
     "responseClass" : "User",
-    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
+    "errorResponses" : [swe.invalid('uuid'), swe.notFound('user')],
     "nickname" : "getUserById"
   },
   'action': function (req,res) {
     var uuid = req.params.uuid;
     if (!uuid) throw swe.invalid('uuid');
 
-    User.get(uuid, function (err, user) {
+    User.getByUUID(uuid, function (err, user) {
       if (err) throw swe.notFound('user');
       if (user) res.send(JSON.stringify(user));
       else throw swe.notFound('user');
@@ -100,49 +107,49 @@ exports.findById = {
   }
 };
 
-exports.findByStatus = {
-  'spec': {
-    "description" : "Operations about users",
-    "path" : "/user/findByStatus",
-    "notes" : "Multiple status values can be provided with comma-separated strings",
-    "summary" : "Find users by status",
-    "method": "GET",
-    "params" : [
-      param.query("status", "Status in the store", "string", true, true, "LIST[available,pending,sold]", "available")
-    ],
-    "responseClass" : "List[User]",
-    "errorResponses" : [swe.invalid('status')],
-    "nickname" : "findUsersByStatus"
-  },
-  'action': function (req,res) {
-    var statusString = url.parse(req.url,true).query["status"];
-    if (!statusString) {
-      throw swe.invalid('status'); }
+// exports.findByStatus = {
+//   'spec': {
+//     "description" : "Operations about users",
+//     "path" : "/user/findByStatus",
+//     "notes" : "Multiple status values can be provided with comma-separated strings",
+//     "summary" : "Find users by status",
+//     "method": "GET",
+//     "params" : [
+//       param.query("status", "Status in the store", "string", true, true, "LIST[available,pending,sold]", "available")
+//     ],
+//     "responseClass" : "List[User]",
+//     "errorResponses" : [swe.invalid('status')],
+//     "nickname" : "findUsersByStatus"
+//   },
+//   'action': function (req,res) {
+//     var statusString = url.parse(req.url,true).query["status"];
+//     if (!statusString) {
+//       throw swe.invalid('status'); }
 
-    var output = userData.findUserByStatus(statusString);
-    res.send(JSON.stringify(output));
-  }
-};
+//     var output = userData.findUserByStatus(statusString);
+//     res.send(JSON.stringify(output));
+//   }
+// };
 
-exports.findByTags = {
-  'spec': {
-    "path" : "/user/findByTags",
-    "notes" : "Multiple tags can be provided with comma-separated strings. Use tag1, tag2, tag3 for testing.",
-    "summary" : "Find users by tags",
-    "method": "GET",
-    "params" : [param.query("tags", "Tags to filter by", "string", true, true)],
-    "responseClass" : "List[User]",
-    "errorResponses" : [swe.invalid('tag')],
-    "nickname" : "findUsersByTags"
-  },
-  'action': function (req,res) {
-    var tagsString = url.parse(req.url,true).query["tags"];
-    if (!tagsString) {
-      throw swe.invalid('tag'); }
-    var output = userData.findUserByTags(tagsString);
-    writeResponse(res, output);
-  }
-};
+// exports.findByTags = {
+//   'spec': {
+//     "path" : "/user/findByTags",
+//     "notes" : "Multiple tags can be provided with comma-separated strings. Use tag1, tag2, tag3 for testing.",
+//     "summary" : "Find users by tags",
+//     "method": "GET",
+//     "params" : [param.query("tags", "Tags to filter by", "string", true, true)],
+//     "responseClass" : "List[User]",
+//     "errorResponses" : [swe.invalid('tag')],
+//     "nickname" : "findUsersByTags"
+//   },
+//   'action': function (req,res) {
+//     var tagsString = url.parse(req.url,true).query["tags"];
+//     if (!tagsString) {
+//       throw swe.invalid('tag'); }
+//     var output = userData.findUserByTags(tagsString);
+//     writeResponse(res, output);
+//   }
+// };
 
 /**
  * POST /users/:id
@@ -150,25 +157,36 @@ exports.findByTags = {
 
 exports.updateUser = {
   'spec': {
-    "path" : "/user/{id}",
-    "notes" : "updates a user in the store",
-    "method": "POST",
+    "path" : "/user/{uuid}",
+    "notes" : "updates a user name",
+    "method": "PUT",
     "summary" : "Update an existing user",
-    "params" : [param.body("User", "User object that needs to be updated", "User")],
+    "params" : [param.path("uuid", "ID of user that needs to be fetched", "string"),
+                param.body("User", "User object that needs to be updated", "User")],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "updateUser"
   },
   'action': function(req, res) {
+    var start = new Date();
     var body = req.body;
-    if(!body || !req.params.id){
+    var uuid = req.params.uuid;
+    if (!body || !uuid || !body.name){
       throw swe.invalid('user');
     }
-    User.get(req.params.id, function (err, user) {
-      if (err) throw swe.invalid('id');
-      user.name = req.body.name;
-      user.save(function (err) {
-        if (err) throw swe.invalid('name');
-        res.send(200);
+    var params = {
+      uuid: uuid,
+      name: req.body.name
+    };
+    User.updateName(params, function (err, user) {
+      if (err) {
+        console.log(err);
+        // throw swe.invalid('uuid');
+        throw err;
+      }
+      if (!user) throw swe.invalid('user');
+      writeResponse(res, {
+        response: user,
+        durationMS: new Date() - start
       });
     });
   }

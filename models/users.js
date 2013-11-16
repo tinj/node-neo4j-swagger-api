@@ -17,7 +17,7 @@ module.exports = (function () {
   }
 
 
-  var _get = function (uuid, callback) {
+  var _getByUUID = function (uuid, callback) {
     var params = {
       uuid : uuid
     };
@@ -31,6 +31,23 @@ module.exports = (function () {
     cypher(query, params, function (err, results) {
       if (err || !results.length) return callback(err);
       // console.log(results);
+      callback(null, new User(results[0].user));
+    });
+  };
+
+  var _getByName = function (name, callback) {
+    var params = {
+      name : name
+    };
+
+    var query = [
+      'MATCH (user:User)',
+      'WHERE user.name = {name}',
+      'RETURN user'
+    ].join('\n');
+
+    cypher(query, params, function (err, results) {
+      if (err || !results.length) return callback(err);
       callback(null, new User(results[0].user));
     });
   };
@@ -81,6 +98,27 @@ module.exports = (function () {
     });
   };
 
+  var _updateName = function (params, callback) {
+    var cypher_params = {
+      uuid : params.uuid,
+      name : params.name
+    };
+
+    var query = [
+      'MATCH (user:User)',
+      'WHERE user.uuid = {uuid}',
+      'SET user.name = {name}',
+      'RETURN user'
+    ].join('\n');
+
+    cypher(query, cypher_params, function (err, results) {
+      if (err || !results.length) return callback(err);
+      // console.log(results);
+      callback(null, new User(results[0].user));
+    });
+  };
+
+
   // creates the user with cypher
   var _create = function (data, callback) {
     var params = {
@@ -128,7 +166,9 @@ module.exports = (function () {
   // exposed functions
 
   return {
-    get: _get,
+    getByUUID: _getByUUID,
+    getByName: _getByName,
+    updateName: _updateName,
     create: _create,
     login: _create,
     getAll: _getAll,
