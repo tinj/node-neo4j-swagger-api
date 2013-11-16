@@ -122,13 +122,7 @@ module.exports = (function () {
       'MATCH (user)-[r?]-()',
       'DELETE user, r',
     ].join('\n');
-    // console.log(params);
-    // console.log(query);
-    console.log(query);
-    cypher(query, params, function (err) {
-      console.log(err);
-      callback(err);
-    });
+    cypher(query, params, callback);
   };
 
   // exposed functions

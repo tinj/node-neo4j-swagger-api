@@ -87,7 +87,7 @@ swagger.addModels(models)
   .addGet(routes.users.list)
   .addGet(routes.users.findById)
   .addPost(routes.users.addUser)
-  // .addDelete(routes.users.deleteUser)
+  .addDelete(routes.users.deleteUser)
 
   .addGet(routes.pets.findByTags)
   .addGet(routes.pets.findByStatus)

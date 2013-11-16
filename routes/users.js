@@ -89,9 +89,8 @@ exports.findById = {
     "nickname" : "getUserById"
   },
   'action': function (req,res) {
-    if (!req.params.uuid) {
-      throw swe.invalid('uuid'); }
     var uuid = req.params.uuid;
+    if (!uuid) throw swe.invalid('uuid');
 
     User.get(uuid, function (err, user) {
       if (err) throw swe.notFound('user');
@@ -190,9 +189,11 @@ exports.deleteUser = {
     "nickname" : "deleteUser"
   },
   'action': function(req, res) {
-    if (!req.params.uuid) throw swe.invalid('uuid');
-    User.deleteUser(req.params.uuid, function (err) {
-      if (err) throw swe.notFound('user');
+    var uuid = req.params.uuid;
+    if (!uuid) throw swe.invalid('uuid');
+
+    User.deleteUser(uuid, function (err) {
+      if (err) throw swe.invalid('user');
       res.send(200);
     });
   }

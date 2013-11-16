@@ -2,9 +2,13 @@ module.exports = {
   "Envelope":{
     "id":"Envelope",
     "properties":{
-      "response":{
-        "type":"long"
-      },
+      "response":[
+        "User",
+        "Pet",
+        "List[User]",
+        "List[Pet]",
+      ],
+      "responseTime":"integer",
       "name":{
         "type":"string"
       }
