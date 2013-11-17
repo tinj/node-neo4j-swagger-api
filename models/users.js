@@ -148,6 +148,24 @@ module.exports = (function () {
     cypher(query, cypher_params, callback);
   };
 
+  // unfriend the user
+  var _unfriend = function (params, options, callback) {
+    var cypher_params = {
+      uuid: params.uuid,
+      friend: params.friend
+    };
+
+    var query = [
+      'MATCH (user:User)-[r:friend]-(friend:User)',
+      'WHERE user.uuid={uuid} AND friend.uuid={friend}',
+      'DELETE r',
+      'RETURN user, friend'
+    ].join('\n');
+    console.log(query);
+    cypher(query, cypher_params, callback);
+  };
+
+
   // exposed functions
 
   return {
@@ -158,6 +176,7 @@ module.exports = (function () {
     login: _.partial(_singleUser, _create),
     getAll: _.partial(_multipleUsers, _matchAll),
     friendUser: _.partial(_singleUserWithFriend, _friend),
+    unfriendUser: _.partial(_singleUserWithFriend, _unfriend),
     deleteUser: _delete
   };
 

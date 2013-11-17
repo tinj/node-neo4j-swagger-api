@@ -189,7 +189,7 @@ exports.friendUser = {
     "params" : [param.path("uuid", "UUID of the user", "string"),
                 param.path("friend", "UUID of the user to be friended", "string")],
     "errorResponses" : [swe.invalid('uuid'), swe.notFound('user'), swe.invalid('input')],
-    "nickname" : "updateUser"
+    "nickname" : "friendUser"
   },
   'action': function(req, res) {
     var start = new Date();
@@ -206,7 +206,7 @@ exports.friendUser = {
       uuid: uuid,
       friend: friend
     };
-    User.friendUser(params, {}, function (err, user, friend, time) {
+    User.friendUser(params, {}, function (err, user, friend) {
       if (err) {
         console.log(err);
         throw swe.invalid('uuid');
@@ -215,8 +215,7 @@ exports.friendUser = {
       writeResponse(res, {
         response: {
           user: user,
-          friend: friend,
-          time: time
+          friend: friend
         },
         durationMS: new Date() - start
       });
@@ -224,19 +223,45 @@ exports.friendUser = {
   }
 };
 
-
-/**
- * POST /users/:id/unfollow
- */
-// exports.unfollow = function (req, res, next) {
-//   User.get(req.params.id, function (err, user) {
-//     if (err) return next(err);
-//     User.get(req.body.user.id, function (err, other) {
-//       if (err) return next(err);
-//       user.unfollow(other, function (err) {
-//         if (err) return next(err);
-//         res.redirect('/users/' + user.id);
-//       });
-//     });
-//   });
-// };
+exports.unfriendUser = {
+  'spec': {
+    "path" : "/user/{uuid}/unfriend/{friend}",
+    "notes" : "unfriend a user by UUID",
+    "method": "POST",
+    "summary" : "Unfriend an existing user",
+    "params" : [param.path("uuid", "UUID of the user", "string"),
+                param.path("friend", "UUID of the user to be unfriended", "string")],
+    "errorResponses" : [swe.invalid('uuid'), swe.notFound('user'), swe.invalid('input')],
+    "nickname" : "unfriendUser"
+  },
+  'action': function(req, res) {
+    var start = new Date();
+    // var body = req.body;
+    var uuid = req.params.uuid;
+    var friend = req.params.friend;
+    if (!uuid || !friend){
+      throw swe.invalid('user');
+    }
+    if (friend == uuid) {
+      throw swe.invalid('friend');
+    }
+    var params = {
+      uuid: uuid,
+      friend: friend
+    };
+    User.unfriendUser(params, {}, function (err, user, friend) {
+      if (err) {
+        console.log(err);
+        throw swe.invalid('uuid');
+      }
+      if (!user) throw swe.invalid('user');
+      writeResponse(res, {
+        response: {
+          user: user,
+          friend: friend
+        },
+        durationMS: new Date() - start
+      });
+    });
+  }
+};
