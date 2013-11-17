@@ -8,7 +8,10 @@ var User = require('../models/neo4j/user');
 
 module.exports = (function () {
 
-  // util functions
+  /**
+   *  Util Functions
+   */
+
   var whereTemplate = _.template('user.<%= key %>={<%= key %>}');
 
   var _where = function (keys) {
@@ -18,6 +21,7 @@ module.exports = (function () {
       }).join(' AND ');
     }
   };
+
 
   /**
    *  Result Functions
@@ -44,6 +48,13 @@ module.exports = (function () {
     });
   };
 
+  // returns a user and a friend
+  var _singleUserWithFriend = function (queryFn, params, options, callback) {
+    queryFn(params, options, function (err, results) {
+      if (err || !results.length) return callback(err);
+      callback(null, new User(results[0].user), new User(results[0].friend));
+    });
+  };
 
   /**
    *  Query Functions
@@ -52,8 +63,6 @@ module.exports = (function () {
 
 
   var _matchBy = function (keys, params, options, callback) {
-    // var cypher_params = _.pick(params, keys);
-    console.log('inside match');
     var cypher_params = _.pick(params, keys);
 
     var query = [
@@ -61,8 +70,6 @@ module.exports = (function () {
       _where(keys),
       'RETURN user'
     ].join('\n');
-    console.log(cypher_params);
-    console.log(query);
 
     cypher(query, cypher_params, callback);
   };
@@ -124,6 +131,23 @@ module.exports = (function () {
     cypher(query, cypher_params, callback);
   };
 
+
+  // friend the user
+  var _friend = function (params, options, callback) {
+    var cypher_params = {
+      uuid: params.uuid,
+      friend: params.friend
+    };
+
+    var query = [
+      'MATCH (user:User), (friend:User)',
+      'WHERE user.uuid={uuid} AND friend.uuid={friend} AND NOT((user)-[:friend]-(friend))',
+      'CREATE (user)-[:friend {created: timestamp()}]->(friend)',
+      'RETURN user, friend'
+    ].join('\n');
+    cypher(query, cypher_params, callback);
+  };
+
   // exposed functions
 
   return {
@@ -133,6 +157,7 @@ module.exports = (function () {
     create: _.partial(_singleUser, _create),
     login: _.partial(_singleUser, _create),
     getAll: _.partial(_multipleUsers, _matchAll),
+    friendUser: _.partial(_singleUserWithFriend, _friend),
     deleteUser: _delete
   };
 

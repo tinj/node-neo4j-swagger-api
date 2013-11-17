@@ -13,14 +13,14 @@ function writeResponse (res, data) {
   res.send(JSON.stringify(data));
 }
 
-function writeResponseEnvelope (res, data) {
-  var envelope = {
-    response: data,
-    extra: 'extra metadata'
-  };
-  sw.setHeaders(res);
-  res.send(JSON.stringify(envelope));
-}
+// function writeResponseEnvelope (res, data) {
+//   var envelope = {
+//     response: data,
+//     extra: 'extra metadata'
+//   };
+//   sw.setHeaders(res);
+//   res.send(JSON.stringify(envelope));
+// }
 
 
 /**
@@ -137,8 +137,7 @@ exports.updateUser = {
     User.updateName(params, {}, function (err, user) {
       if (err) {
         console.log(err);
-        // throw swe.invalid('uuid');
-        throw err;
+        throw swe.invalid('uuid');
       }
       if (!user) throw swe.invalid('user');
       writeResponse(res, {
@@ -180,18 +179,51 @@ exports.deleteUser = {
 /**
  * POST /users/:id/follow
  */
-// exports.follow = function (req, res, next) {
-//   User.get(req.params.id, function (err, user) {
-//     if (err) return next(err);
-//     User.get(req.body.user.id, function (err, other) {
-//       if (err) return next(err);
-//       user.follow(other, function (err) {
-//         if (err) return next(err);
-//         res.redirect('/users/' + user.id);
-//       });
-//     });
-//   });
-// };
+
+exports.friendUser = {
+  'spec': {
+    "path" : "/user/{uuid}/friend/{friend}",
+    "notes" : "friends a user by UUID",
+    "method": "POST",
+    "summary" : "Friend an existing user",
+    "params" : [param.path("uuid", "UUID of the user", "string"),
+                param.path("friend", "UUID of the user to be friended", "string")],
+    "errorResponses" : [swe.invalid('uuid'), swe.notFound('user'), swe.invalid('input')],
+    "nickname" : "updateUser"
+  },
+  'action': function(req, res) {
+    var start = new Date();
+    // var body = req.body;
+    var uuid = req.params.uuid;
+    var friend = req.params.friend;
+    if (!uuid || !friend){
+      throw swe.invalid('user');
+    }
+    if (friend == uuid) {
+      throw swe.invalid('friend');
+    }
+    var params = {
+      uuid: uuid,
+      friend: friend
+    };
+    User.friendUser(params, {}, function (err, user, friend, time) {
+      if (err) {
+        console.log(err);
+        throw swe.invalid('uuid');
+      }
+      if (!user) throw swe.invalid('user');
+      writeResponse(res, {
+        response: {
+          user: user,
+          friend: friend,
+          time: time
+        },
+        durationMS: new Date() - start
+      });
+    });
+  }
+};
+
 
 /**
  * POST /users/:id/unfollow
