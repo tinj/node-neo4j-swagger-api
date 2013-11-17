@@ -5,7 +5,7 @@ var User = require('../models/users');
 
 var sw = require("swagger-node-express");
 var param = sw.params;
-var url = require("url");
+// var url = require("url");
 var swe = sw.errors;
 
 function writeResponse (res, data) {
@@ -40,7 +40,7 @@ exports.list = {
     "nickname" : "getUsers"
   },
   'action': function (req,res) {
-    User.getAll(function (err, users) {
+    User.getAll(null, {}, function (err, users) {
       if (err || !users) throw swe.notFound('users');
       res.send(JSON.stringify(users));
     });
@@ -69,7 +69,7 @@ exports.addUser = {
     } else {
       User.create({
         name: req.body['name']
-      }, function (err, user) {
+      }, {}, function (err, user) {
         if (err || !user) throw swe.invalid('input');
         res.send(JSON.stringify(user));
       });
@@ -99,7 +99,7 @@ exports.findById = {
     var uuid = req.params.uuid;
     if (!uuid) throw swe.invalid('uuid');
 
-    User.getByUUID(uuid, function (err, user) {
+    User.getByUUID({uuid: uuid}, {}, function (err, user) {
       if (err) throw swe.notFound('user');
       if (user) res.send(JSON.stringify(user));
       else throw swe.notFound('user');
@@ -107,49 +107,6 @@ exports.findById = {
   }
 };
 
-// exports.findByStatus = {
-//   'spec': {
-//     "description" : "Operations about users",
-//     "path" : "/user/findByStatus",
-//     "notes" : "Multiple status values can be provided with comma-separated strings",
-//     "summary" : "Find users by status",
-//     "method": "GET",
-//     "params" : [
-//       param.query("status", "Status in the store", "string", true, true, "LIST[available,pending,sold]", "available")
-//     ],
-//     "responseClass" : "List[User]",
-//     "errorResponses" : [swe.invalid('status')],
-//     "nickname" : "findUsersByStatus"
-//   },
-//   'action': function (req,res) {
-//     var statusString = url.parse(req.url,true).query["status"];
-//     if (!statusString) {
-//       throw swe.invalid('status'); }
-
-//     var output = userData.findUserByStatus(statusString);
-//     res.send(JSON.stringify(output));
-//   }
-// };
-
-// exports.findByTags = {
-//   'spec': {
-//     "path" : "/user/findByTags",
-//     "notes" : "Multiple tags can be provided with comma-separated strings. Use tag1, tag2, tag3 for testing.",
-//     "summary" : "Find users by tags",
-//     "method": "GET",
-//     "params" : [param.query("tags", "Tags to filter by", "string", true, true)],
-//     "responseClass" : "List[User]",
-//     "errorResponses" : [swe.invalid('tag')],
-//     "nickname" : "findUsersByTags"
-//   },
-//   'action': function (req,res) {
-//     var tagsString = url.parse(req.url,true).query["tags"];
-//     if (!tagsString) {
-//       throw swe.invalid('tag'); }
-//     var output = userData.findUserByTags(tagsString);
-//     writeResponse(res, output);
-//   }
-// };
 
 /**
  * POST /users/:id
@@ -177,7 +134,7 @@ exports.updateUser = {
       uuid: uuid,
       name: req.body.name
     };
-    User.updateName(params, function (err, user) {
+    User.updateName(params, {}, function (err, user) {
       if (err) {
         console.log(err);
         // throw swe.invalid('uuid');
@@ -210,7 +167,7 @@ exports.deleteUser = {
     var uuid = req.params.uuid;
     if (!uuid) throw swe.invalid('uuid');
 
-    User.deleteUser(uuid, function (err) {
+    User.deleteUser({uuid: uuid}, {}, function (err) {
       if (err) throw swe.invalid('user');
       res.send(200);
     });
@@ -223,31 +180,31 @@ exports.deleteUser = {
 /**
  * POST /users/:id/follow
  */
-exports.follow = function (req, res, next) {
-  User.get(req.params.id, function (err, user) {
-    if (err) return next(err);
-    User.get(req.body.user.id, function (err, other) {
-      if (err) return next(err);
-      user.follow(other, function (err) {
-        if (err) return next(err);
-        res.redirect('/users/' + user.id);
-      });
-    });
-  });
-};
+// exports.follow = function (req, res, next) {
+//   User.get(req.params.id, function (err, user) {
+//     if (err) return next(err);
+//     User.get(req.body.user.id, function (err, other) {
+//       if (err) return next(err);
+//       user.follow(other, function (err) {
+//         if (err) return next(err);
+//         res.redirect('/users/' + user.id);
+//       });
+//     });
+//   });
+// };
 
 /**
  * POST /users/:id/unfollow
  */
-exports.unfollow = function (req, res, next) {
-  User.get(req.params.id, function (err, user) {
-    if (err) return next(err);
-    User.get(req.body.user.id, function (err, other) {
-      if (err) return next(err);
-      user.unfollow(other, function (err) {
-        if (err) return next(err);
-        res.redirect('/users/' + user.id);
-      });
-    });
-  });
-};
+// exports.unfollow = function (req, res, next) {
+//   User.get(req.params.id, function (err, user) {
+//     if (err) return next(err);
+//     User.get(req.body.user.id, function (err, other) {
+//       if (err) return next(err);
+//       user.unfollow(other, function (err) {
+//         if (err) return next(err);
+//         res.redirect('/users/' + user.id);
+//       });
+//     });
+//   });
+// };

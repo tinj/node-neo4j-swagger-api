@@ -9,96 +9,70 @@ var User = require('../models/neo4j/user');
 module.exports = (function () {
 
   // util functions
-  // var tmpl = _.template('user.<%= key %>={<%= key %>}');
-  function whereMatch (type, params, join) {
-    return _.map(_.keys(input_params), function (key) {
-      return type+'.'+key+'={'+key+'}';
-    }).join(' '+join+' ');
-  }
+  var whereTemplate = _.template('user.<%= key %>={<%= key %>}');
 
-
-  var _getByUUID = function (uuid, callback) {
-    var params = {
-      uuid : uuid
-    };
-
-    var query = [
-      'MATCH (user:User)',
-      'WHERE user.uuid = {uuid}',
-      'RETURN user'
-    ].join('\n');
-
-    cypher(query, params, function (err, results) {
-      if (err || !results.length) return callback(err);
-      // console.log(results);
-      callback(null, new User(results[0].user));
-    });
+  var _where = function (keys) {
+    if (keys && keys.length) {
+      return 'WHERE '+_.map(keys, function (key) {
+        return whereTemplate({key: key});
+      }).join(' AND ');
+    }
   };
 
-  var _getByName = function (name, callback) {
-    var params = {
-      name : name
-    };
+  /**
+   *  Result Functions
+   *  to be combined with queries using _.partial()
+   */
 
-    var query = [
-      'MATCH (user:User)',
-      'WHERE user.name = {name}',
-      'RETURN user'
-    ].join('\n');
-
-    cypher(query, params, function (err, results) {
+  // return a single user
+  var _singleUser = function (queryFn, params, options, callback) {
+    queryFn(params, options, function (err, results) {
       if (err || !results.length) return callback(err);
       callback(null, new User(results[0].user));
     });
   };
 
-  var _search = function (input_params, callback) {
-    var params = {
-      uuid : input_params.uuid,
-      name : input_params.name
-    };
-
-    var query = [
-      'MATCH (user:User)',
-      'WHERE '+ whereMatch('user', input_params, 'AND'),
-      'RETURN user'
-    ].join('\n');
-
-    cypher(query, params, function (err, results) {
-      if (err || !results.length) return callback(err);
-      // console.log(results);
-      callback(null, new User(results[0].user));
-      var users = _.map(results, function (node) {
-        return new User(node.user);
-      });
-
-      if (users.length === 1) {
-        callback(null, users[0]);
-      } else {
-        callback(null, users);
-      }
-    });
-  };
-
-  var _getAll = function (callback) {
-    var params = {};
-
-    var query = [
-      'MATCH (user:User)',
-      'RETURN user'
-    ].join('\n');
-
-    cypher(query, params, function (err, results) {
-      if (err) return callback(null, []);
-      var users = _.map(results, function (node) {
-        return new User(node.user);
+  // return multiple users
+  var _multipleUsers = function (queryFn, params, options, callback) {
+    queryFn(params, options, function (err, results) {
+      if (err) return callback(err);
+      var users = _.map(results, function (result) {
+        return new User(result.user);
       });
 
       callback(null, users);
     });
   };
 
-  var _updateName = function (params, callback) {
+
+  /**
+   *  Query Functions
+   *  to be combined with result functions using _.partial()
+   */
+
+
+  var _matchBy = function (keys, params, options, callback) {
+    // var cypher_params = _.pick(params, keys);
+    console.log('inside match');
+    var cypher_params = _.pick(params, keys);
+
+    var query = [
+      'MATCH (user:User)',
+      _where(keys),
+      'RETURN user'
+    ].join('\n');
+    console.log(cypher_params);
+    console.log(query);
+
+    cypher(query, cypher_params, callback);
+  };
+
+  var _matchByUUID = _.partial(_matchBy, ['uuid']);
+  var _matchByName = _.partial(_matchBy, ['name']);
+  var _matchAll = _.partial(_matchBy, []);
+
+
+  var _updateName = function (params, options, callback) {
     var cypher_params = {
       uuid : params.uuid,
       name : params.name
@@ -111,46 +85,33 @@ module.exports = (function () {
       'RETURN user'
     ].join('\n');
 
-    cypher(query, cypher_params, function (err, results) {
-      if (err || !results.length) return callback(err);
-      // console.log(results);
-      callback(null, new User(results[0].user));
-    });
+    cypher(query, cypher_params, callback);
   };
 
 
   // creates the user with cypher
-  var _create = function (data, callback) {
-    var params = {
-      // uid : data.uid,
-      uuid: uuid(),
-      name: data.name
+  var _create = function (params, options, callback) {
+    var cypher_params = {
+      uuid: params.uuid || uuid(),
+      name: params.name
     };
 
     var query = [
-      'MERGE (user:User {name: {name}})',
+      'MERGE (user:User {name: {name}, uuid: {uuid}})',
       'ON CREATE user',
-      'SET user.created = timestamp(), user.uuid={uuid}',
+      'SET user.created = timestamp()',
       'ON MATCH user',
       'SET user.lastLogin = timestamp()',
       'RETURN user'
     ].join('\n');
-    // console.log(params);
-    // console.log(query);
 
-    cypher(query, params, function (err, results) {
-      if (err || !results.length) return callback(err);
-      // console.log(JSON.stringify(results));
-      var user = new User(results[0].user);
-      // console.log(user);
-      callback(null, user);
-    });
+    cypher(query, cypher_params, callback);
   };
 
-  // creates the user with cypher
-  var _delete = function (uuid, callback) {
-    var params = {
-      uuid: uuid
+  // delete the user and any relationships with cypher
+  var _delete = function (params, options, callback) {
+    var cypher_params = {
+      uuid: params.uuid
     };
 
     var query = [
@@ -160,18 +121,18 @@ module.exports = (function () {
       'MATCH (user)-[r?]-()',
       'DELETE user, r',
     ].join('\n');
-    cypher(query, params, callback);
+    cypher(query, cypher_params, callback);
   };
 
   // exposed functions
 
   return {
-    getByUUID: _getByUUID,
-    getByName: _getByName,
-    updateName: _updateName,
-    create: _create,
-    login: _create,
-    getAll: _getAll,
+    getByUUID: _.partial(_singleUser, _matchByUUID),
+    getByName: _.partial(_singleUser, _matchByName),
+    updateName: _.partial(_singleUser, _updateName),
+    create: _.partial(_singleUser, _create),
+    login: _.partial(_singleUser, _create),
+    getAll: _.partial(_multipleUsers, _matchAll),
     deleteUser: _delete
   };
 
