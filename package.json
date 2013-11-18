@@ -1,6 +1,6 @@
 {
-  "name": "node-neo4j-api-server",
-  "version": "0.0.2",
+  "name": "neo4j-swagger-api",
+  "version": "0.0.3",
   "author": {
     "name": "Mat Tyndall",
     "email": "mat@tinj.com",
@@ -9,7 +9,7 @@
   "description": "node neo4j api server using express and swagger",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tinj"
+    "url": "https://github.com/tinj/node-neo4j-swagger-api"
   },
   "keywords": [
     "node",
@@ -21,10 +21,6 @@
     "swagger",
     "server"
   ],
-  "scripts": {
-    "start": "node app.js"
-  },
-  "main": "index.js",
   "engines": {
     "node": ">= 0.10.x",
     "npm": "1.2.x"
