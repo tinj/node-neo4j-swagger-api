@@ -7,8 +7,7 @@ The idea is to make it as easy as possible to create an api using node and neo4j
 
 
 Try it out at http://neo4j-swagger.tinj.com/docs
-URL: http://neo4j-swagger.tinj.com/api/v0/api-docs
-API Key: special-key
+
 
 node-neo4j-template
 https://github.com/aseemk/node-neo4j-template/

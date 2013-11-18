@@ -44,7 +44,10 @@
         console.log("added key " + key);
         window.authorizations.add("key", new ApiKeyAuthorization("api_key", key, "query"));
       }
-    })
+    });
+
+    $('#input_apiKey').val("special-key");
+
     window.swaggerUi.load();
   });
 
