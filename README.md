@@ -5,6 +5,11 @@ This is an open source node neo4j api server based on node-neo4j-template and sw
 
 The idea is to make it as easy as possible to create an api using node and neo4j that can be consumed by some other app. Swagger provides interactive documentation so that it is easy to interact with the API. The goal is merge swagger and neo4j gist together (vizualizations!) so developers can see how neo4j and the api calls relate to each other.
 
+
+Try it out at http://neo4j-swagger.tinj.com/docs
+URL: http://neo4j-swagger.tinj.com/api/v0/api-docs
+API Key: special-key
+
 node-neo4j-template
 https://github.com/aseemk/node-neo4j-template/
 

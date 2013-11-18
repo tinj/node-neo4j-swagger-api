@@ -1,6 +1,6 @@
 {
   "name": "neo4j-swagger-api",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": {
     "name": "Mat Tyndall",
     "email": "mat@tinj.com",
@@ -37,7 +37,9 @@
     "colors": "0.6.x",
     "async": ">=0.2.9",
     "moment": ">=2.4.0",
-    "uuid": ">=1.4.1"
+    "uuid": ">=1.4.1",
+    "mocha": ">= 1.6.0",
+    "should": ">= 0.6.3"
   },
   "license": "MIT"
 }
