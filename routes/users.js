@@ -80,7 +80,7 @@ exports.addUser = {
     "summary" : "Add a new user to the store",
     "method": "POST",
     "responseClass" : "User",
-    "params" : [param.body("User", "User object that needs to be added to the store", "User")],
+    "params" : [param.body("newUser", 'User object that needs to be added, eg: {"name":"Mat"}', "newUser")],
     "errorResponses" : [swe.invalid('input')],
     "nickname" : "addUser"
   },

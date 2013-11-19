@@ -79,6 +79,15 @@ module.exports = {
       }
     }
   },
+  "newUser":{
+    "id":"newUser",
+    "required": ["name"],
+    "properties":{
+      "name":{
+        "type":"string",
+      }
+    }
+  },
   "Tag":{
     "id":"Tag",
     "properties":{
