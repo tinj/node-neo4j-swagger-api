@@ -173,14 +173,33 @@ var _matchWithFriends = function (params, options, callback) {
 // exposed functions
 
 module.exports = {
+  // get a single user by uuid
   getByUUID: Cypher(_matchByUUID, _singleUser),
+
+  // get a single user by name
   getByName: Cypher(_matchByName, _singleUser),
+
+  // get a user by uuid and update their name
   updateName: Cypher(_updateName, _singleUser),
+
+  // create a new user
   create: Cypher(_create, _singleUser),
+
+  // login a user
   login: Cypher(_create, _singleUser),
+
+  // get all users
   getAll: Cypher(_matchAll, _multipleUsers),
+
+  // friend a user by uuid
   friendUser: Cypher(_friend, _singleUserWithFriend),
+
+  // unfriend a user by uuid
   unfriendUser: Cypher(_unfriend, _singleUserWithFriend),
+
+  // delete a user by uuid
   deleteUser: Cypher(_delete),
+
+  // get a single user by uuid and all friends
   getWithFriends: Cypher(_matchWithFriends, _singleUserWithFriends)
 };
