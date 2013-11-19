@@ -86,6 +86,7 @@ var models = require("./models/swagger_models");
 swagger.addModels(models)
   .addGet(routes.users.list)
   .addGet(routes.users.findById)
+  .addGet(routes.users.findByIdWithFriends)
   .addPost(routes.users.addUser)
   .addPost(routes.users.friendUser)
   .addPost(routes.users.unfriendUser)

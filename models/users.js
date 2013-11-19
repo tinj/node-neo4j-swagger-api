@@ -63,6 +63,16 @@ module.exports = (function () {
     callback(null, new User(results[0].user), new User(results[0].friend));
   };
 
+  // returns a user and their friends
+  var _singleUserWithFriends = function (results, callback) {
+    var user = new User(results[0].user)
+    var friends = _.map(results[0].friends, function (friend) {
+      return new User(friend);
+    });
+    user.friends(friends);
+    callback(null, user);
+  };
+
   /**
    *  Query Functions
    *  to be combined with result functions using _.partial()
@@ -101,7 +111,6 @@ module.exports = (function () {
 
     callback(null, query, cypher_params);
   };
-
 
   // creates the user with cypher
   var _create = function (params, options, callback) {
@@ -171,6 +180,22 @@ module.exports = (function () {
     callback(null, query, cypher_params);
   };
 
+  // match with friends
+  var _matchWithFriends = function (params, options, callback) {
+    var cypher_params = {
+      uuid: params.uuid
+    };
+
+    var query = [
+      'MATCH (user:User)',
+      'WHERE user.uuid={uuid}',
+      'WITH user',
+      'MATCH (user)-[r?:friend]-(friend:User)',
+      'RETURN user, COLLECT(friend) as friends'
+    ].join('\n');
+    callback(null, query, cypher_params);
+  };
+
 
 
 
@@ -185,7 +210,8 @@ module.exports = (function () {
     getAll: Cypher(_matchAll, _multipleUsers),
     friendUser: Cypher(_friend, _singleUserWithFriend),
     unfriendUser: Cypher(_unfriend, _singleUserWithFriend),
-    deleteUser: Cypher(_delete)
+    deleteUser: Cypher(_delete),
+    getWithFriends: Cypher(_matchWithFriends, _singleUserWithFriends)
   };
 
 })();
