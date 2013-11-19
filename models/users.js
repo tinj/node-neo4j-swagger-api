@@ -18,7 +18,8 @@ module.exports = (function () {
   // for creating cypher queries and processing the results
   function Cypher (queryFn, resultsFn) {
     return function (params, options, callback) {
-      queryFn(params, options, function (query, cypher_params) {
+      queryFn(params, options, function (err, query, cypher_params) {
+        if (err) return callback(err);
         cypher(query, cypher_params, function (err, results) {
           if (err || !results.length || !_.isFunction(resultsFn)) return callback(err);
           resultsFn(results, callback);
@@ -77,7 +78,7 @@ module.exports = (function () {
       'RETURN user'
     ].join('\n');
 
-    callback(query, cypher_params);
+    callback(null, query, cypher_params);
   };
 
   var _matchByUUID = _.partial(_matchBy, ['uuid']);
@@ -98,7 +99,7 @@ module.exports = (function () {
       'RETURN user'
     ].join('\n');
 
-    callback(query, cypher_params);
+    callback(null, query, cypher_params);
   };
 
 
@@ -118,7 +119,7 @@ module.exports = (function () {
       'RETURN user'
     ].join('\n');
 
-    callback(query, cypher_params);
+    callback(null, query, cypher_params);
   };
 
   // delete the user and any relationships with cypher
@@ -134,7 +135,7 @@ module.exports = (function () {
       'MATCH (user)-[r?]-()',
       'DELETE user, r',
     ].join('\n');
-    callback(query, cypher_params);
+    callback(null, query, cypher_params);
   };
 
 
@@ -151,7 +152,7 @@ module.exports = (function () {
       'CREATE (user)-[:friend {created: timestamp()}]->(friend)',
       'RETURN user, friend'
     ].join('\n');
-    callback(query, cypher_params);
+    callback(null, query, cypher_params);
   };
 
   // unfriend the user
@@ -167,7 +168,7 @@ module.exports = (function () {
       'DELETE r',
       'RETURN user, friend'
     ].join('\n');
-    callback(query, cypher_params);
+    callback(null, query, cypher_params);
   };
 
 
