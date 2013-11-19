@@ -6,7 +6,7 @@ var param = sw.params;
 var url = require("url");
 var swe = sw.errors;
 
-var petData = require("../models/pets");
+var petData = require("../models/oldpets");
 
 function writeResponse (res, data) {
   sw.setHeaders(res);
