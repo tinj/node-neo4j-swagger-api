@@ -1,5 +1,8 @@
-// user.js
-// User neo4j query logic.
+/**
+ *  neo4j user functions
+ *  these are mostly written in a functional style
+ */
+
 
 var _ = require('underscore');
 var uuid = require('uuid');
@@ -11,6 +14,18 @@ module.exports = (function () {
   /**
    *  Util Functions
    */
+
+  // for creating cypher queries and processing the results
+  function Cypher (queryFn, resultsFn) {
+    return function (params, options, callback) {
+      queryFn(params, options, function (query, cypher_params) {
+        cypher(query, cypher_params, function (err, results) {
+          if (err || !results.length || !_.isFunction(resultsFn)) return callback(err);
+          resultsFn(results, callback);
+        });
+      });
+    };
+  }
 
   var whereTemplate = _.template('user.<%= key %>={<%= key %>}');
 
@@ -29,31 +44,22 @@ module.exports = (function () {
    */
 
   // return a single user
-  var _singleUser = function (queryFn, params, options, callback) {
-    queryFn(params, options, function (err, results) {
-      if (err || !results.length) return callback(err);
-      callback(null, new User(results[0].user));
-    });
+  var _singleUser = function (results, callback) {
+    callback(null, new User(results[0].user));
   };
 
   // return multiple users
-  var _multipleUsers = function (queryFn, params, options, callback) {
-    queryFn(params, options, function (err, results) {
-      if (err) return callback(err);
-      var users = _.map(results, function (result) {
-        return new User(result.user);
-      });
-
-      callback(null, users);
+  var _multipleUsers = function (results, callback) {
+    var users = _.map(results, function (result) {
+      return new User(result.user);
     });
+
+    callback(null, users);
   };
 
   // returns a user and a friend
-  var _singleUserWithFriend = function (queryFn, params, options, callback) {
-    queryFn(params, options, function (err, results) {
-      if (err || !results.length) return callback(err);
-      callback(null, new User(results[0].user), new User(results[0].friend));
-    });
+  var _singleUserWithFriend = function (results, callback) {
+    callback(null, new User(results[0].user), new User(results[0].friend));
   };
 
   /**
@@ -71,7 +77,7 @@ module.exports = (function () {
       'RETURN user'
     ].join('\n');
 
-    cypher(query, cypher_params, callback);
+    callback(query, cypher_params);
   };
 
   var _matchByUUID = _.partial(_matchBy, ['uuid']);
@@ -92,7 +98,7 @@ module.exports = (function () {
       'RETURN user'
     ].join('\n');
 
-    cypher(query, cypher_params, callback);
+    callback(query, cypher_params);
   };
 
 
@@ -112,7 +118,7 @@ module.exports = (function () {
       'RETURN user'
     ].join('\n');
 
-    cypher(query, cypher_params, callback);
+    callback(query, cypher_params);
   };
 
   // delete the user and any relationships with cypher
@@ -128,7 +134,7 @@ module.exports = (function () {
       'MATCH (user)-[r?]-()',
       'DELETE user, r',
     ].join('\n');
-    cypher(query, cypher_params, callback);
+    callback(query, cypher_params);
   };
 
 
@@ -145,7 +151,7 @@ module.exports = (function () {
       'CREATE (user)-[:friend {created: timestamp()}]->(friend)',
       'RETURN user, friend'
     ].join('\n');
-    cypher(query, cypher_params, callback);
+    callback(query, cypher_params);
   };
 
   // unfriend the user
@@ -161,23 +167,24 @@ module.exports = (function () {
       'DELETE r',
       'RETURN user, friend'
     ].join('\n');
-    console.log(query);
-    cypher(query, cypher_params, callback);
+    callback(query, cypher_params);
   };
+
+
 
 
   // exposed functions
 
   return {
-    getByUUID: _.partial(_singleUser, _matchByUUID),
-    getByName: _.partial(_singleUser, _matchByName),
-    updateName: _.partial(_singleUser, _updateName),
-    create: _.partial(_singleUser, _create),
-    login: _.partial(_singleUser, _create),
-    getAll: _.partial(_multipleUsers, _matchAll),
-    friendUser: _.partial(_singleUserWithFriend, _friend),
-    unfriendUser: _.partial(_singleUserWithFriend, _unfriend),
-    deleteUser: _delete
+    getByUUID: Cypher(_matchByUUID, _singleUser),
+    getByName: Cypher(_matchByName, _singleUser),
+    updateName: Cypher(_updateName, _singleUser),
+    create: Cypher(_create, _singleUser),
+    login: Cypher(_create, _singleUser),
+    getAll: Cypher(_matchAll, _multipleUsers),
+    friendUser: Cypher(_friend, _singleUserWithFriend),
+    unfriendUser: Cypher(_unfriend, _singleUserWithFriend),
+    deleteUser: Cypher(_delete)
   };
 
 })();

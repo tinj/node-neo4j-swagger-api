@@ -20,6 +20,7 @@
     $(function () {
       window.swaggerUi = new SwaggerUi({
       url: "http://localhost:3000/api/v0/api-docs",
+      apiKey: "special-key",
       dom_id: "swagger-ui-container",
       supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
       onComplete: function(swaggerApi, swaggerUi){
@@ -47,6 +48,7 @@
     });
 
     $('#input_apiKey').val("special-key");
+    $('#input_apiKey').change();
 
     window.swaggerUi.load();
   });
