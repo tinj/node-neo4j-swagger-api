@@ -107,6 +107,30 @@ exports.findById = {
   }
 };
 
+exports.findByIdWithFriends = {
+  'spec': {
+    "description" : "Operations about users",
+    "path" : "/user/{uuid}/friends",
+    "notes" : "Returns a user based on ID",
+    "summary" : "Find user by ID",
+    "method": "GET",
+    "params" : [param.path("uuid", "ID of user that needs to be fetched", "string")],
+    "responseClass" : "User",
+    "errorResponses" : [swe.invalid('uuid'), swe.notFound('user')],
+    "nickname" : "getByIdWithFriends"
+  },
+  'action': function (req,res) {
+    var uuid = req.params.uuid;
+    if (!uuid) throw swe.invalid('uuid');
+
+    User.getWithFriends({uuid: uuid}, {}, function (err, user) {
+      if (err) throw swe.notFound('user');
+      if (user) res.send(JSON.stringify(user));
+      else throw swe.notFound('user');
+    });
+  }
+};
+
 
 /**
  * POST /users/:id
