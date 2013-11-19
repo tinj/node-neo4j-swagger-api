@@ -5,8 +5,9 @@ var User = require('../models/users');
 
 var sw = require("swagger-node-express");
 var param = sw.params;
-// var url = require("url");
+var url = require("url");
 var swe = sw.errors;
+var _ = require('underscore');
 
 function writeResponse (res, data) {
   sw.setHeaders(res);
@@ -51,7 +52,7 @@ exports.listWithFriends = {
   'spec': {
     "description" : "List all users",
     "path" : "/users/friends",
-    "notes" : "Returns all users based on ID",
+    "notes" : "Returns all users and their friends",
     "summary" : "Find all users and their friends",
     "method": "GET",
     "params" : [],
@@ -73,24 +74,40 @@ exports.listWithFriends = {
  * POST /users
  */
 
+var names = [
+  'Mat',
+  'Jo',
+  'Billy',
+  'Sarah',
+  'Ann',
+  'Jackson',
+  'Mel',
+  'Carla',
+];
+
+function randomNameDefault () {
+  return JSON.stringify({name: _.sample(names)});
+}
+
 exports.addUser = {
   'spec': {
     "path" : "/users",
-    "notes" : "adds a user to the store",
-    "summary" : "Add a new user to the store",
+    "notes" : "adds a user to the graph",
+    "summary" : "Add a new user to the graph",
     "method": "POST",
     "responseClass" : "User",
-    "params" : [param.body("User", "User object that needs to be added to the store", "User")],
+    "params" : [param.body("User", "User name", "newUser", randomNameDefault())],
     "errorResponses" : [swe.invalid('input')],
     "nickname" : "addUser"
   },
   'action': function(req, res) {
-    var body = req.body;
-    if (!body || !body.name){
-      throw swe.invalid('user');
+    // var name = url.parse(req.url,true).query["name"];
+    var name = req.body ? req.body.name : null;
+    if (!name){
+      throw swe.invalid('name');
     } else {
       User.create({
-        name: req.body['name']
+        name: name
       }, {}, function (err, user) {
         if (err || !user) throw swe.invalid('input');
         res.send(JSON.stringify(user));
@@ -109,10 +126,10 @@ exports.findById = {
   'spec': {
     "description" : "Operations about users",
     "path" : "/user/{uuid}",
-    "notes" : "Returns a user based on ID",
-    "summary" : "Find user by ID",
+    "notes" : "Returns a user based on UUID",
+    "summary" : "Find user by UUID",
     "method": "GET",
-    "params" : [param.path("uuid", "ID of user that needs to be fetched", "string")],
+    "params" : [param.path("uuid", "UUID of user that needs to be fetched", "string")],
     "responseClass" : "User",
     "errorResponses" : [swe.invalid('uuid'), swe.notFound('user')],
     "nickname" : "getUserById"
@@ -166,7 +183,7 @@ exports.updateUser = {
     "summary" : "Update an existing user",
     "params" : [param.path("uuid", "ID of user that needs to be fetched", "string"),
                 param.body("User", "User object that needs to be updated", "User")],
-    "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
+    "errorResponses" : [swe.invalid('uuid'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "updateUser"
   },
   'action': function(req, res) {
