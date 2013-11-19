@@ -20,8 +20,8 @@ var _singleUser = function (results, callback) {
   callback(null, new User(results[0].user));
 };
 
-// return multiple users
-var _multipleUsers = function (results, callback) {
+// return many users
+var _manyUsers = function (results, callback) {
   var users = _.map(results, function (result) {
     return new User(result.user);
   });
@@ -34,14 +34,25 @@ var _singleUserWithFriend = function (results, callback) {
   callback(null, new User(results[0].user), new User(results[0].friend));
 };
 
-// returns a user and their friends
-var _singleUserWithFriends = function (results, callback) {
-  var user = new User(results[0].user)
-  var friends = _.map(results[0].friends, function (friend) {
+// returns a user and their friends from a cypher result
+var parseUserWithFriends = function (result) {
+  var user = new User(result.user);
+  var friends = _.map(result.friends, function (friend) {
     return new User(friend);
   });
   user.friends(friends);
-  callback(null, user);
+  return user;
+};
+
+// returns a user and their friends
+var _singleUserWithFriends = function (results, callback) {
+  callback(null, parseUserWithFriends(results[0]));
+};
+
+// returns many users and their friends
+var _manyUsersWithFriends = function (results, callback) {
+  var users = _.map(results, parseUserWithFriends);
+  callback(null, users);
 };
 
 /**
@@ -168,6 +179,19 @@ var _matchWithFriends = function (params, options, callback) {
 };
 
 
+// match all with friends
+var _matchAllWithFriends = function (params, options, callback) {
+  var cypher_params = {};
+
+  var query = [
+    'MATCH (user:User)',
+    'WITH user',
+    'MATCH (user)-[r?:friend]-(friend:User)',
+    'RETURN user, COLLECT(friend) as friends'
+  ].join('\n');
+  callback(null, query, cypher_params);
+};
+
 
 
 // exposed functions
@@ -189,7 +213,7 @@ module.exports = {
   login: Cypher(_create, _singleUser),
 
   // get all users
-  getAll: Cypher(_matchAll, _multipleUsers),
+  getAll: Cypher(_matchAll, _manyUsers),
 
   // friend a user by uuid
   friendUser: Cypher(_friend, _singleUserWithFriend),
@@ -201,5 +225,8 @@ module.exports = {
   deleteUser: Cypher(_delete),
 
   // get a single user by uuid and all friends
-  getWithFriends: Cypher(_matchWithFriends, _singleUserWithFriends)
+  getWithFriends: Cypher(_matchWithFriends, _singleUserWithFriends),
+
+  // get all users and all friends
+  getAllWithFriends: Cypher(_matchAllWithFriends, _manyUsersWithFriends)
 };

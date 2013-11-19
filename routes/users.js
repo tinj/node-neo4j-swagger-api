@@ -31,8 +31,8 @@ exports.list = {
   'spec': {
     "description" : "List all users",
     "path" : "/users",
-    "notes" : "Returns all users based on ID",
-    "summary" : "Find all users by ID",
+    "notes" : "Returns all users",
+    "summary" : "Find all users",
     "method": "GET",
     "params" : [],
     "responseClass" : "List[User]",
@@ -46,6 +46,28 @@ exports.list = {
     });
   }
 };
+
+exports.listWithFriends = {
+  'spec': {
+    "description" : "List all users",
+    "path" : "/users/friends",
+    "notes" : "Returns all users based on ID",
+    "summary" : "Find all users and their friends",
+    "method": "GET",
+    "params" : [],
+    "responseClass" : "List[User]",
+    "errorResponses" : [swe.notFound('user')],
+    "nickname" : "getUsersWithFriends"
+  },
+  'action': function (req,res) {
+    User.getAllWithFriends(null, {}, function (err, users) {
+      if (err || !users) throw swe.notFound('users');
+      res.send(JSON.stringify(users));
+    });
+  }
+};
+
+
 
 /**
  * POST /users
