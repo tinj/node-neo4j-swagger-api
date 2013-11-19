@@ -7,6 +7,7 @@ var sw = require("swagger-node-express");
 var param = sw.params;
 var url = require("url");
 var swe = sw.errors;
+var _ = require('underscore');
 
 function writeResponse (res, data) {
   sw.setHeaders(res);
@@ -73,19 +74,35 @@ exports.listWithFriends = {
  * POST /users
  */
 
+var names = [
+  'Mat',
+  'Jo',
+  'Billy',
+  'Sarah',
+  'Ann',
+  'Jackson',
+  'Mel',
+  'Carla',
+];
+
+function randomNameDefault () {
+  return JSON.stringify({name: _.sample(names)});
+}
+
 exports.addUser = {
   'spec': {
     "path" : "/users",
-    "notes" : "adds a user to the store",
-    "summary" : "Add a new user to the store",
+    "notes" : "adds a user to the graph",
+    "summary" : "Add a new user to the graph",
     "method": "POST",
     "responseClass" : "User",
-    "params" : [param.query("name", "User name", "string")],
+    "params" : [param.body("User", "User name", "newUser", randomNameDefault())],
     "errorResponses" : [swe.invalid('input')],
     "nickname" : "addUser"
   },
   'action': function(req, res) {
-    var name = url.parse(req.url,true).query["name"];
+    // var name = url.parse(req.url,true).query["name"];
+    var name = req.body ? req.body.name : null;
     if (!name){
       throw swe.invalid('name');
     } else {
