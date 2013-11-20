@@ -35,7 +35,7 @@ var _singleUserWithFriend = function (results, callback) {
 };
 
 // returns a user and their friends from a cypher result
-var parseUserWithFriends = function (result) {
+var _parseUserWithFriends = function (result) {
   var user = new User(result.user);
   var friends = _.map(result.friends, function (friend) {
     return new User(friend);
@@ -46,12 +46,12 @@ var parseUserWithFriends = function (result) {
 
 // returns a user and their friends
 var _singleUserWithFriends = function (results, callback) {
-  callback(null, parseUserWithFriends(results[0]));
+  callback(null, _parseUserWithFriends(results[0]));
 };
 
 // returns many users and their friends
 var _manyUsersWithFriends = function (results, callback) {
-  var users = _.map(results, parseUserWithFriends);
+  var users = _.map(results, _parseUserWithFriends);
   callback(null, users);
 };
 

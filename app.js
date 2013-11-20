@@ -5,8 +5,8 @@
 var express     = require('express')
   , url         = require("url")
   , swagger     = require("swagger-node-express")
-  , http        = require('http')
-  , path        = require('path')
+  // , http        = require('http')
+  // , path        = require('path')
 
   , routes      = require('./routes')
 

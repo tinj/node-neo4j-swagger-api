@@ -35,7 +35,7 @@ var _singlePetWithOwner = function (results, callback) {
 };
 
 // returns a pet and their owners from a cypher result
-var parsePetWithOwners = function (result) {
+var _parsePetWithOwners = function (result) {
   var pet = new Pet(result.pet);
   var owners = _.map(result.owners, function (owner) {
     return new Pet(owner);
@@ -46,12 +46,12 @@ var parsePetWithOwners = function (result) {
 
 // returns a pet and their owners
 var _singlePetWithOwners = function (results, callback) {
-  callback(null, parsePetWithOwners(results[0]));
+  callback(null, _parsePetWithOwners(results[0]));
 };
 
 // returns many pets and their owners
 var _manyPetsWithOwners = function (results, callback) {
-  var pets = _.map(results, parsePetWithOwners);
+  var pets = _.map(results, _parsePetWithOwners);
   callback(null, pets);
 };
 

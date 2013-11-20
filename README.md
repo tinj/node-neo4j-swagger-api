@@ -25,6 +25,8 @@ https://github.com/neo4j-contrib/graphgist/
 
 Built focusing on using Cypher and Neo4j 2.0M06
 
+![Neo4j-Swagger Diagram](/views/img/neo4j-swagger.jpg "Neo4j-Swagger Diagram")
+
 
 Start
 clone
