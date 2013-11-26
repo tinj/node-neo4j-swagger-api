@@ -5,9 +5,11 @@
 
 
 var _ = require('underscore');
+var _s = require('underscore.string');
 var uuid = require('uuid');
 var Cypher = require('../neo4j/cypher');
 var Pet = require('../models/neo4j/pet');
+var Category = require('../models/neo4j/category');
 
 
 /**
@@ -18,6 +20,14 @@ var Pet = require('../models/neo4j/pet');
 // return a single pet
 var _singlePet = function (results, callback) {
   callback(null, new Pet(results[0].pet));
+};
+
+// return a single pet with a category
+var _singlePetWithCategory = function (results, callback) {
+  var category = new Category(results[0].category);
+  var pet = new Pet(results[0].pet);
+  pet.category(category);
+  callback(null, pet);
 };
 
 // return many pets
@@ -77,6 +87,17 @@ var _matchByUUID = _.partial(_matchBy, ['uuid']);
 var _matchByName = _.partial(_matchBy, ['name']);
 var _matchAll = _.partial(_matchBy, []);
 
+var _matchByCategory = function (keys, params, options, callback) {
+  var cypher_params = _.pick(params, keys);
+
+  var query = [
+    'MATCH (pet:Pet)-[:is_a]->(category:Category)',
+    Cypher.where('pet', keys),
+    'RETURN pet'
+  ].join('\n');
+
+  callback(null, query, cypher_params);
+};
 
 var _updateName = function (params, options, callback) {
   var cypher_params = {
@@ -98,18 +119,23 @@ var _updateName = function (params, options, callback) {
 var _create = function (params, options, callback) {
   var cypher_params = {
     uuid: params.uuid || uuid(),
-    name: params.name
+    name: params.name,
+    category: _s.capitalize(params.category)
   };
 
   var query = [
     'MERGE (pet:Pet {name: {name}, uuid: {uuid}})',
     'ON CREATE pet',
     'SET pet.created = timestamp()',
-    'ON MATCH pet',
-    'SET pet.lastLogin = timestamp()',
-    'RETURN pet'
+    'WITH pet',
+    'MERGE (category:Category {name: {category}})',
+    'ON CREATE category',
+    'SET category.created = timestamp()',
+    'WITH pet, category',
+    'CREATE UNIQUE (pet)-[:is_a]->(category)',
+    'RETURN pet, category'
   ].join('\n');
-
+  console.log(query);
   callback(null, query, cypher_params);
 };
 
@@ -207,7 +233,7 @@ module.exports = {
   updateName: Cypher(_updateName, _singlePet),
 
   // create a new pet
-  create: Cypher(_create, _singlePet),
+  create: Cypher(_create, _singlePetWithCategory),
 
   // login a pet
   login: Cypher(_create, _singlePet),

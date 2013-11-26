@@ -1,5 +1,6 @@
 // this still uses the example code from the swagger petstore example
 
+var Pets = require('../models/pets');
 
 var sw = require("swagger-node-express");
 var param = sw.params;
@@ -82,25 +83,39 @@ exports.findByTags = {
 
 exports.addPet = {
   'spec': {
-    "path" : "/pet",
-    "notes" : "adds a pet to the store",
-    "summary" : "Add a new pet to the store",
+    "path" : "/pets",
+    "notes" : "adds a pet to the graph with a category",
+    "summary" : "Add a new pet to the graph with a category",
     "method": "POST",
-    "params" : [param.body("Pet", "Pet object that needs to be added to the store", "Pet")],
+    "responseClass" : "Pet",
+    "params" : [param.body("Pet", "Pet name", "Pet")],
     "errorResponses" : [swe.invalid('input')],
     "nickname" : "addPet"
   },
   'action': function(req, res) {
-    var body = req.body;
-    if(!body || !body.id){
-      throw swe.invalid('pet');
-    }
-    else{
-      petData.addPet(body);
-      res.send(200);
+    var body = req.body || {};
+
+    var name = body.name;
+    var category = body.category;
+    console.log(name, category);
+    if (!name){
+      throw swe.invalid('name');
+    } else if (!category) {
+      throw swe.invalid('category');
+    } else {
+      Pets.create({
+        name: name,
+        category: category
+      }, {}, function (err, pet) {
+        console.log(err);
+        console.log(pet);
+        if (err || !pet) throw swe.invalid('input');
+        res.send(JSON.stringify(pet));
+      });
     }
   }
 };
+
 
 exports.updatePet = {
   'spec': {

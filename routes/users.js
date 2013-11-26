@@ -1,7 +1,7 @@
 // users.js
 // Routes to CRUD users.
 
-var User = require('../models/users');
+var Users = require('../models/users');
 
 var sw = require("swagger-node-express");
 var param = sw.params;
@@ -41,7 +41,7 @@ exports.list = {
     "nickname" : "getUsers"
   },
   'action': function (req,res) {
-    User.getAll(null, {}, function (err, users) {
+    Users.getAll(null, {}, function (err, users) {
       if (err || !users) throw swe.notFound('users');
       res.send(JSON.stringify(users));
     });
@@ -61,7 +61,7 @@ exports.listWithFriends = {
     "nickname" : "getUsersWithFriends"
   },
   'action': function (req,res) {
-    User.getAllWithFriends(null, {}, function (err, users) {
+    Users.getAllWithFriends(null, {}, function (err, users) {
       if (err || !users) throw swe.notFound('users');
       res.send(JSON.stringify(users));
     });
@@ -106,7 +106,7 @@ exports.addUser = {
     if (!name){
       throw swe.invalid('name');
     } else {
-      User.create({
+      Users.create({
         name: name
       }, {}, function (err, user) {
         if (err || !user) throw swe.invalid('input');
@@ -138,7 +138,7 @@ exports.findById = {
     var uuid = req.params.uuid;
     if (!uuid) throw swe.invalid('uuid');
 
-    User.getByUUID({uuid: uuid}, {}, function (err, user) {
+    Users.getByUUID({uuid: uuid}, {}, function (err, user) {
       if (err) throw swe.notFound('user');
       if (user) res.send(JSON.stringify(user));
       else throw swe.notFound('user');
@@ -162,7 +162,7 @@ exports.findByIdWithFriends = {
     var uuid = req.params.uuid;
     if (!uuid) throw swe.invalid('uuid');
 
-    User.getWithFriends({uuid: uuid}, {}, function (err, user) {
+    Users.getWithFriends({uuid: uuid}, {}, function (err, user) {
       if (err) throw swe.notFound('user');
       if (user) res.send(JSON.stringify(user));
       else throw swe.notFound('user');
@@ -197,7 +197,7 @@ exports.updateUser = {
       uuid: uuid,
       name: req.body.name
     };
-    User.updateName(params, {}, function (err, user) {
+    Users.updateName(params, {}, function (err, user) {
       if (err) {
         console.log(err);
         throw swe.invalid('uuid');
@@ -229,7 +229,7 @@ exports.deleteUser = {
     var uuid = req.params.uuid;
     if (!uuid) throw swe.invalid('uuid');
 
-    User.deleteUser({uuid: uuid}, {}, function (err) {
+    Users.deleteUser({uuid: uuid}, {}, function (err) {
       if (err) throw swe.invalid('user');
       res.send(200);
     });
@@ -269,7 +269,7 @@ exports.friendUser = {
       uuid: uuid,
       friend: friend
     };
-    User.friendUser(params, {}, function (err, user, friend) {
+    Users.friendUser(params, {}, function (err, user, friend) {
       if (err) {
         console.log(err);
         throw swe.invalid('uuid');
@@ -312,7 +312,7 @@ exports.unfriendUser = {
       uuid: uuid,
       friend: friend
     };
-    User.unfriendUser(params, {}, function (err, user, friend) {
+    Users.unfriendUser(params, {}, function (err, user, friend) {
       if (err) {
         console.log(err);
         throw swe.invalid('uuid');

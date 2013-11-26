@@ -18,7 +18,7 @@ module.exports = {
     "id":"Category",
     "properties":{
       "id":{
-        "type":"long"
+        "type":"string"
       },
       "name":{
         "type":"string"
@@ -28,40 +28,42 @@ module.exports = {
   "Pet":{
     "id":"Pet",
     "properties":{
-      "tags":{
-        "items":{
-          "$ref":"Tag"
-        },
-        "type":"Array"
-      },
+      // "tags":{
+      //   "items":{
+      //     "$ref":"Tag"
+      //   },
+      //   "type":"Array"
+      // },
       "id":{
-        "type":"long"
-      },
-      "category":{
-        "type":"Category"
-      },
-      "status":{
-        "allowableValues":{
-          "valueType":"LIST",
-          "values":[
-            "available",
-            "pending",
-            "sold"
-          ],
-          "valueType":"LIST"
-        },
-        "description":"pet status in the store",
         "type":"string"
       },
+      // "category":{
+      //   "items": {
+      //     "$ref":"Category"
+      //   }
+      // },
+      // "status":{
+      //   "allowableValues":{
+      //     "valueType":"LIST",
+      //     "values":[
+      //       "available",
+      //       "pending",
+      //       "sold"
+      //     ],
+      //     "valueType":"LIST"
+      //   },
+      //   "description":"pet status in the store",
+      //   "type":"string"
+      // },
       "name":{
         "type":"string"
-      },
-      "photoUrls":{
-        "items":{
-          "type":"string"
-        },
-        "type":"Array"
       }
+      // "photoUrls":{
+      //   "items":{
+      //     "type":"string"
+      //   },
+      //   "type":"Array"
+      // }
     }
   },
   "User":{
