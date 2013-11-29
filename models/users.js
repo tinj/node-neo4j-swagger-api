@@ -85,8 +85,7 @@ var _updateName = function (params, options, callback) {
   };
 
   var query = [
-    'MATCH (user:User)',
-    'WHERE user.uuid = {uuid}',
+    'MATCH (user:User {uuid:{uuid}})',
     'SET user.name = {name}',
     'RETURN user'
   ].join('\n');
@@ -103,9 +102,9 @@ var _create = function (params, options, callback) {
 
   var query = [
     'MERGE (user:User {name: {name}, uuid: {uuid}})',
-    'ON CREATE user',
+    'ON CREATE',
     'SET user.created = timestamp()',
-    'ON MATCH user',
+    'ON MATCH',
     'SET user.lastLogin = timestamp()',
     'RETURN user'
   ].join('\n');
@@ -120,10 +119,8 @@ var _delete = function (params, options, callback) {
   };
 
   var query = [
-    'MATCH (user:User)',
-    'WHERE user.uuid={uuid}',
-    'WITH user',
-    'MATCH (user)-[r?]-()',
+    'MATCH (user:User {uuid:{uuid}}',
+    'OPTIONAL MATCH (user)-[r]-()',
     'DELETE user, r',
   ].join('\n');
   callback(null, query, cypher_params);
@@ -138,8 +135,8 @@ var _friend = function (params, options, callback) {
   };
 
   var query = [
-    'MATCH (user:User), (friend:User)',
-    'WHERE user.uuid={uuid} AND friend.uuid={friend} AND NOT((user)-[:friend]-(friend))',
+    'MATCH (user:User {uuid:{uuid}}), (friend:User {uuid:{friend}})',
+    'WHERE NOT((user)-[:friend]-(friend))',
     'CREATE (user)-[:friend {created: timestamp()}]->(friend)',
     'RETURN user, friend'
   ].join('\n');
@@ -154,8 +151,7 @@ var _unfriend = function (params, options, callback) {
   };
 
   var query = [
-    'MATCH (user:User)-[r:friend]-(friend:User)',
-    'WHERE user.uuid={uuid} AND friend.uuid={friend}',
+    'MATCH (user:User {uuid:{uuid}})-[r:friend]-(friend:User {uuid:{friend}})',
     'DELETE r',
     'RETURN user, friend'
   ].join('\n');
@@ -169,10 +165,8 @@ var _matchWithFriends = function (params, options, callback) {
   };
 
   var query = [
-    'MATCH (user:User)',
-    'WHERE user.uuid={uuid}',
-    'WITH user',
-    'MATCH (user)-[r?:friend]-(friend:User)',
+    'MATCH (user:User {uuid:{uuid}})',
+    'OPTIONAL MATCH (user)-[r:friend]-(friend:User)',
     'RETURN user, COLLECT(friend) as friends'
   ].join('\n');
   callback(null, query, cypher_params);
@@ -185,8 +179,7 @@ var _matchAllWithFriends = function (params, options, callback) {
 
   var query = [
     'MATCH (user:User)',
-    'WITH user',
-    'MATCH (user)-[r?:friend]-(friend:User)',
+    'OPTIONAL MATCH (user)-[r:friend]-(friend:User)',
     'RETURN user, COLLECT(friend) as friends'
   ].join('\n');
   callback(null, query, cypher_params);
