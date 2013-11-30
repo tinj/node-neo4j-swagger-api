@@ -119,7 +119,19 @@ var _delete = function (params, options, callback) {
   };
 
   var query = [
-    'MATCH (user:User {uuid:{uuid}}',
+    'MATCH (user:User {uuid:{uuid}})',
+    'OPTIONAL MATCH (user)-[r]-()',
+    'DELETE user, r',
+  ].join('\n');
+  callback(null, query, cypher_params);
+};
+
+// delete all users
+var _deleteAll = function (params, options, callback) {
+  var cypher_params = {};
+
+  var query = [
+    'MATCH (user:User)',
     'OPTIONAL MATCH (user)-[r]-()',
     'DELETE user, r',
   ].join('\n');
@@ -216,6 +228,9 @@ module.exports = {
 
   // delete a user by uuid
   deleteUser: Cypher(_delete),
+
+  // delete a user by uuid
+  deleteAllUsers: Cypher(_deleteAll),
 
   // get a single user by uuid and all friends
   getWithFriends: Cypher(_matchWithFriends, _singleUserWithFriends),

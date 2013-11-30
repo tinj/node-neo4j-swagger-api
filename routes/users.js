@@ -218,7 +218,7 @@ exports.updateUser = {
 exports.deleteUser = {
   'spec': {
     "path" : "/users/{uuid}",
-    "notes" : "removes a user from the store",
+    "notes" : "removes a user from the db",
     "method": "DELETE",
     "summary" : "Remove an existing user",
     "params" : [param.path("uuid", "UUID of user that needs to be removed", "string")],
@@ -232,6 +232,28 @@ exports.deleteUser = {
     Users.deleteUser({uuid: uuid}, {}, function (err) {
       if (err) throw swe.invalid('user');
       res.send(200);
+    });
+  }
+};
+
+
+/**
+ * DELETE /user/:uuid
+ */
+
+exports.deleteAllUsers = {
+  'spec': {
+    "path" : "/users",
+    "notes" : "removes all users from the db",
+    "method": "DELETE",
+    "summary" : "Removes all users",
+    "errorResponses" : [swe.invalid('user')],
+    "nickname" : "deleteAllUsers"
+  },
+  'action': function(req, res) {
+    Users.deleteAllUsers(null, null, function (err) {
+      if (err) throw swe.invalid('user');
+      res.send(200); // is this working? swagger isn't acknowledging this
     });
   }
 };
