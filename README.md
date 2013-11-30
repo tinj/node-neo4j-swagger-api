@@ -23,7 +23,7 @@ graphgist
 https://github.com/neo4j-contrib/graphgist/
 
 
-Built focusing on using Cypher and Neo4j 2.0M06
+Built focusing on using Cypher and Neo4j 2.0RC1
 
 ![Neo4j-Swagger Diagram](/views/img/neo4j-swagger.jpg "Neo4j-Swagger Diagram")
 
@@ -37,6 +37,10 @@ http://localhost:3000/docs
 
 
 TODO
+
+I'm using Trello for my todo list, feel free to comment!
+
+https://trello.com/b/kelJzC12/node-neo4j-swagger-api
 
 1. Move neo4j queries and results to swagger client
 2. Add graph visualization to swagger
