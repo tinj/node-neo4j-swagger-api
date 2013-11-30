@@ -11,10 +11,18 @@ var db = require('./index')
 var Cypher = function (queryFn, resultsFn) {
   return function (params, options, callback) {
     queryFn(params, options, function (err, query, cypher_params) {
-      if (err) return callback(err);
+      if (err) {
+        return callback(err);
+      }
       db.query(query, cypher_params, function (err, results) {
-        if (err || !_.isFunction(resultsFn)) return callback(err);
-        resultsFn(results, callback);
+        if (err) {
+          console.log(err);
+          callback(err);
+        } else if (!_.isFunction(resultsFn)) {
+          callback(err);
+        } else {
+          resultsFn(results, callback);
+        }
       });
     });
   };

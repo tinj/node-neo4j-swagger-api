@@ -8,7 +8,7 @@ var _ = require('underscore');
 var uuid = require('uuid');
 var Cypher = require('../neo4j/cypher');
 var User = require('../models/neo4j/user');
-
+var async = require('async');
 
 /**
  *  Result Functions
@@ -112,6 +112,33 @@ var _create = function (params, options, callback) {
   callback(null, query, cypher_params);
 };
 
+// creates many users with cypher
+var _createMany = function (params, options, callback) {
+  var users = _.map(params.users, function (user) {
+    return {
+      uuid: user.uuid || uuid(),
+      name: user.name
+    };
+  });
+
+  var cypher_params = {
+    users: users
+  };
+
+  var query = [
+    'MERGE (user:User {name: {users}.name, uuid: {users}.uuid})',
+    'ON CREATE',
+    'SET user.created = timestamp()',
+    'ON MATCH',
+    'SET user.lastLogin = timestamp()',
+    'RETURN user'
+  ].join('\n');
+  console.log(users);
+  console.log(query);
+
+  callback(null, query, cypher_params);
+};
+
 // delete the user and any relationships with cypher
 var _delete = function (params, options, callback) {
   var cypher_params = {
@@ -201,40 +228,66 @@ var _matchAllWithFriends = function (params, options, callback) {
 
 // exposed functions
 
+
+// get a single user by uuid
+var getByUUID = Cypher(_matchByUUID, _singleUser);
+
+// get a single user by name
+var getByName = Cypher(_matchByName, _singleUser);
+
+// get a user by uuid and update their name
+var updateName = Cypher(_updateName, _singleUser);
+
+// create a new user
+var create = Cypher(_create, _singleUser);
+
+// create many new users
+var createMany = function (params, options, callback) {
+  async.map(params.users || params.names, function (user, callback) {
+    create(_.pick(user, 'name', 'uuid'), null, callback);
+  }, callback);
+};
+
+// login a user
+var login = create;
+
+// get all users
+var getAll = Cypher(_matchAll, _manyUsers);
+
+// friend a user by uuid
+var friendUser = Cypher(_friend, _singleUserWithFriend);
+
+// unfriend a user by uuid
+var unfriendUser = Cypher(_unfriend, _singleUserWithFriend);
+
+// delete a user by uuid
+var deleteUser = Cypher(_delete);
+
+// delete a user by uuid
+var deleteAllUsers = Cypher(_deleteAll);
+
+// get a single user by uuid and all friends
+var getWithFriends = Cypher(_matchWithFriends, _singleUserWithFriends);
+
+// get all users and all friends
+var getAllWithFriends = Cypher(_matchAllWithFriends, _manyUsersWithFriends);
+
+
+
+// export exposed functions
+
 module.exports = {
-  // get a single user by uuid
-  getByUUID: Cypher(_matchByUUID, _singleUser),
-
-  // get a single user by name
-  getByName: Cypher(_matchByName, _singleUser),
-
-  // get a user by uuid and update their name
-  updateName: Cypher(_updateName, _singleUser),
-
-  // create a new user
-  create: Cypher(_create, _singleUser),
-
-  // login a user
-  login: Cypher(_create, _singleUser),
-
-  // get all users
-  getAll: Cypher(_matchAll, _manyUsers),
-
-  // friend a user by uuid
-  friendUser: Cypher(_friend, _singleUserWithFriend),
-
-  // unfriend a user by uuid
-  unfriendUser: Cypher(_unfriend, _singleUserWithFriend),
-
-  // delete a user by uuid
-  deleteUser: Cypher(_delete),
-
-  // delete a user by uuid
-  deleteAllUsers: Cypher(_deleteAll),
-
-  // get a single user by uuid and all friends
-  getWithFriends: Cypher(_matchWithFriends, _singleUserWithFriends),
-
-  // get all users and all friends
-  getAllWithFriends: Cypher(_matchAllWithFriends, _manyUsersWithFriends)
+  getByUUID: getByUUID,
+  getByName: getByName,
+  updateName: updateName,
+  create: create,
+  createMany: createMany,
+  login: login,
+  getAll: getAll,
+  friendUser: friendUser,
+  unfriendUser: unfriendUser,
+  deleteUser: deleteUser,
+  deleteAllUsers: deleteAllUsers,
+  getWithFriends: getWithFriends,
+  getAllWithFriends: getAllWithFriends
 };

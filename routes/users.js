@@ -117,6 +117,34 @@ exports.addUser = {
 };
 
 
+exports.addUsers = {
+  'spec': {
+    "path" : "/users/many",
+    "notes" : "adds many users to the graph",
+    "summary" : "Add many new users to the graph",
+    "method": "POST",
+    "responseClass" : "List[User]",
+    "params" : [param.body("List[User]", "User name", "newUser")],
+    "errorResponses" : [swe.invalid('input')],
+    "nickname" : "addManyUsers"
+  },
+  'action': function(req, res) {
+    // var name = url.parse(req.url,true).query["name"];
+    var users = req.body ? req.body.users : null;
+    if (!users){
+      throw swe.invalid('users');
+    } else {
+      Users.createMany({
+        users: users
+      }, {}, function (err, users) {
+        if (err || !users) throw swe.invalid('input');
+        res.send(JSON.stringify(users));
+      });
+    }
+  }
+};
+
+
 
 /**
  * GET /users/:uuid
