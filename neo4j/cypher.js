@@ -13,7 +13,7 @@ var Cypher = function (queryFn, resultsFn) {
     queryFn(params, options, function (err, query, cypher_params) {
       if (err) return callback(err);
       db.query(query, cypher_params, function (err, results) {
-        if (err || !results.length || !_.isFunction(resultsFn)) return callback(err);
+        if (err || !_.isFunction(resultsFn)) return callback(err);
         resultsFn(results, callback);
       });
     });

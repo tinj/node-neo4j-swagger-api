@@ -248,6 +248,7 @@ exports.deleteAllUsers = {
     "method": "DELETE",
     "summary" : "Removes all users",
     "errorResponses" : [swe.invalid('user')],
+    // "responseClass": 'code', // does this work?
     "nickname" : "deleteAllUsers"
   },
   'action': function(req, res) {
