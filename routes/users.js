@@ -125,7 +125,7 @@ exports.addUser = {
 exports.findById = {
   'spec': {
     "description" : "Operations about users",
-    "path" : "/user/{uuid}",
+    "path" : "/users/{uuid}",
     "notes" : "Returns a user based on UUID",
     "summary" : "Find user by UUID",
     "method": "GET",
@@ -149,7 +149,7 @@ exports.findById = {
 exports.findByIdWithFriends = {
   'spec': {
     "description" : "Operations about users",
-    "path" : "/user/{uuid}/friends",
+    "path" : "/users/{uuid}/friends",
     "notes" : "Returns a user based on ID",
     "summary" : "Find user by ID",
     "method": "GET",
@@ -177,7 +177,7 @@ exports.findByIdWithFriends = {
 
 exports.updateUser = {
   'spec': {
-    "path" : "/user/{uuid}",
+    "path" : "/users/{uuid}",
     "notes" : "updates a user name",
     "method": "PUT",
     "summary" : "Update an existing user",
@@ -217,7 +217,7 @@ exports.updateUser = {
 
 exports.deleteUser = {
   'spec': {
-    "path" : "/user/{uuid}",
+    "path" : "/users/{uuid}",
     "notes" : "removes a user from the store",
     "method": "DELETE",
     "summary" : "Remove an existing user",
@@ -245,7 +245,7 @@ exports.deleteUser = {
 
 exports.friendUser = {
   'spec': {
-    "path" : "/user/{uuid}/friend/{friend}",
+    "path" : "/users/{uuid}/friend/{friend}",
     "notes" : "friends a user by UUID",
     "method": "POST",
     "summary" : "Friend an existing user",
@@ -288,7 +288,7 @@ exports.friendUser = {
 
 exports.unfriendUser = {
   'spec': {
-    "path" : "/user/{uuid}/unfriend/{friend}",
+    "path" : "/users/{uuid}/unfriend/{friend}",
     "notes" : "unfriend a user by UUID",
     "method": "POST",
     "summary" : "Unfriend an existing user",
