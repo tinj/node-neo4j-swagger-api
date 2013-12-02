@@ -366,9 +366,7 @@ exports.resetUsers = {
 };
 
 
-/**
- * POST /users/:id/follow
- */
+
 
 exports.friendUser = {
   'spec': {
@@ -400,6 +398,38 @@ exports.friendUser = {
       friend_id: friend_id
     };
     Users.friendUser(params, {}, function (err, results, raws) {
+      if (err) throw swe.invalid('id');
+      if (!results) throw swe.invalid('user');
+      writeResponse(res, results, q_raws, raws, start);
+    });
+  }
+};
+
+
+exports.friendRandomUser = {
+  'spec': {
+    "path" : "/users/{id}/friend/random",
+    "notes" : "friends a random user",
+    "method": "POST",
+    "summary" : "Friend an existing user",
+    "params" : [
+      param.path("id", "ID of the user", "string"),
+      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+    ],
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
+    "nickname" : "friendUser"
+  },
+  'action': function(req, res) {
+    var q_raws = parseRaws(req);
+    var start = new Date();
+    var id = req.params.id;
+    if (!id) {
+      throw swe.invalid('user');
+    }
+    var params = {
+      id: id
+    };
+    Users.friendRandomUser(params, {}, function (err, results, raws) {
       if (err) throw swe.invalid('id');
       if (!results) throw swe.invalid('user');
       writeResponse(res, results, q_raws, raws, start);

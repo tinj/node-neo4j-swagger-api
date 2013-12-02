@@ -50,6 +50,7 @@ var _manyUsers = function (results, callback) {
 
 // returns a user and a friend
 var _singleUserWithFriend = function (results, callback) {
+  if (!results.length) return callback();
   callback(null, {
     user: new User(results[0].user),
     friend: new User(results[0].friend)
@@ -204,6 +205,24 @@ var _friend = function (params, options, callback) {
   callback(null, query, cypher_params);
 };
 
+// friend random user
+var _friendRandom = function (params, options, callback) {
+  var cypher_params = {
+    id: params.id
+  };
+
+  var query = [
+    'MATCH (user:User {id:{id}}), (friend:User)',
+    'WHERE NOT((user)-[:friend]-(friend))',
+    'WITH user, friend, rand() as rnd',
+    'ORDER BY rnd',
+    'LIMIT 1',
+    'CREATE (user)-[:friend {created: timestamp()}]->(friend)',
+    'RETURN user, friend'
+  ].join('\n');
+  callback(null, query, cypher_params);
+};
+
 // unfriend the user
 var _unfriend = function (params, options, callback) {
   var cypher_params = {
@@ -292,6 +311,9 @@ var getAll = Cypher(_matchAll, _manyUsers);
 // friend a user by id
 var friendUser = Cypher(_friend, _singleUserWithFriend);
 
+// friend a random user
+var friendRandomUser = Cypher(_friendRandom, _singleUserWithFriend);
+
 // unfriend a user by id
 var unfriendUser = Cypher(_unfriend, _singleUserWithFriend);
 
@@ -321,6 +343,7 @@ module.exports = {
   login: login,
   getAll: getAll,
   friendUser: friendUser,
+  friendRandomUser: friendRandomUser,
   unfriendUser: unfriendUser,
   deleteUser: deleteUser,
   deleteAllUsers: deleteAllUsers,
