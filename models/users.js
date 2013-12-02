@@ -208,7 +208,8 @@ var _friend = function (params, options, callback) {
 // friend random user
 var _friendRandom = function (params, options, callback) {
   var cypher_params = {
-    id: params.id
+    id: params.id,
+    n: params.n
   };
 
   var query = [
@@ -216,9 +217,9 @@ var _friendRandom = function (params, options, callback) {
     'WHERE NOT((user)-[:friend]-(friend))',
     'WITH user, friend, rand() as rnd',
     'ORDER BY rnd',
-    'LIMIT 1',
+    'LIMIT {n}',
     'CREATE (user)-[:friend {created: timestamp()}]->(friend)',
-    'RETURN user, friend'
+    'RETURN user, COLLECT(friend) as friends'
   ].join('\n');
   callback(null, query, cypher_params);
 };
@@ -312,7 +313,7 @@ var getAll = Cypher(_matchAll, _manyUsers);
 var friendUser = Cypher(_friend, _singleUserWithFriend);
 
 // friend a random user
-var friendRandomUser = Cypher(_friendRandom, _singleUserWithFriend);
+var friendRandomUser = Cypher(_friendRandom, _singleUserWithFriends);
 
 // unfriend a user by id
 var unfriendUser = Cypher(_unfriend, _singleUserWithFriend);

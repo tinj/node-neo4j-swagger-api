@@ -408,12 +408,13 @@ exports.friendUser = {
 
 exports.friendRandomUser = {
   'spec': {
-    "path" : "/users/{id}/friend/random",
+    "path" : "/users/{id}/friend/random/{n}",
     "notes" : "friends a random user",
     "method": "POST",
     "summary" : "Friend an existing user",
     "params" : [
       param.path("id", "ID of the user", "string"),
+      param.path("n", "Number of new friends", "integer", "LIST[1,2,3,4,5]", "1"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
@@ -423,11 +424,13 @@ exports.friendRandomUser = {
     var q_raws = parseRaws(req);
     var start = new Date();
     var id = req.params.id;
+    var n = parseInt(req.params.n) || 1;
     if (!id) {
       throw swe.invalid('user');
     }
     var params = {
-      id: id
+      id: id,
+      n: n
     };
     Users.friendRandomUser(params, {}, function (err, results, raws) {
       if (err) throw swe.invalid('id');
