@@ -14,6 +14,18 @@ function writeResponse (res, data) {
   res.send(JSON.stringify(data));
 }
 
+function writeDataResponse (res, results, q_raws, raws, start) {
+  sw.setHeaders(res);
+  var data = {
+    response: results,
+    durationMS: new Date() - start
+  };
+  if (q_raws) {
+    data.raws = raws;
+  }
+  res.send(JSON.stringify(data));
+}
+
 function parseRaws (req) {
   return 'true' == url.parse(req.url,true).query["raws"];
 }
@@ -47,14 +59,8 @@ exports.list = {
     var start = new Date();
     Users.getAll(null, {}, function (err, users, raws) {
       if (err || !users) throw swe.notFound('users');
-      var data = {
-        response: users,
-        durationMS: new Date() - start
-      };
-      if (q_raws) {
-        data.raws = raws;
-      }
-      writeResponse(res, data);
+
+      writeDataResponse(res, users, q_raws, raws, start);
     });
   }
 };
@@ -78,14 +84,7 @@ exports.listWithFriends = {
     var start = new Date();
     Users.getAllWithFriends(null, {}, function (err, users, raws) {
       if (err || !users) throw swe.notFound('users');
-      var data = {
-        response: users,
-        durationMS: new Date() - start
-      };
-      if (q_raws) {
-        data.raws = raws;
-      }
-      writeResponse(res, data);
+      writeDataResponse(res, users, q_raws, raws, start);
     });
   }
 };
@@ -116,14 +115,7 @@ exports.addUser = {
         name: name
       }, {}, function (err, user, raws) {
         if (err || !user) throw swe.invalid('input');
-        var data = {
-          response: user,
-          durationMS: new Date() - start
-        };
-        if (q_raws) {
-          data.raws = raws;
-        }
-        writeResponse(res, data);
+        writeDataResponse(res, user, q_raws, raws, start);
       });
     }
   }
@@ -155,14 +147,7 @@ exports.addUsers = {
         users: users
       }, {}, function (err, users, raws) {
         if (err || !users) throw swe.invalid('input');
-        var data = {
-          response: users,
-          durationMS: new Date() - start
-        };
-        if (q_raws) {
-          data.raws = raws;
-        }
-        writeResponse(res, data);
+        writeDataResponse(res, users, q_raws, raws, start);
       });
     }
   }
@@ -192,14 +177,7 @@ exports.addRandomUsers = {
     } else {
       Users.createRandom({n:n}, null, function (err, users, raws) {
         if (err || !users) throw swe.invalid('input');
-        var data = {
-          response: users,
-          durationMS: new Date() - start
-        };
-        if (q_raws) {
-          data.raws = raws;
-        }
-        writeResponse(res, data);
+        writeDataResponse(res, users, q_raws, raws, start);
       });
     }
   }
@@ -233,14 +211,7 @@ exports.findById = {
 
     Users.getByUUID({uuid: uuid}, {}, function (err, user, raws) {
       if (err) throw swe.notFound('user');
-      var data = {
-        response: user,
-        durationMS: new Date() - start
-      };
-      if (q_raws) {
-        data.raws = raws;
-      }
-      writeResponse(res, data);
+      writeDataResponse(res, user, q_raws, raws, start);
     });
   }
 };
@@ -268,14 +239,7 @@ exports.findByIdWithFriends = {
 
     Users.getWithFriends({uuid: uuid}, {}, function (err, user, raws) {
       if (err) throw swe.notFound('user');
-      var data = {
-        response: user,
-        durationMS: new Date() - start
-      };
-      if (q_raws) {
-        data.raws = raws;
-      }
-      writeResponse(res, data);
+      writeDataResponse(res, user, q_raws, raws, start);
     });
   }
 };
@@ -314,14 +278,7 @@ exports.updateUser = {
     Users.updateName(params, {}, function (err, user, raws) {
       if (err) throw swe.invalid('uuid');
       if (!user) throw swe.invalid('user');
-      var data = {
-        response: user,
-        durationMS: new Date() - start
-      };
-      if (q_raws) {
-        data.raws = raws;
-      }
-      writeResponse(res, data);
+      writeDataResponse(res, user, q_raws, raws, start);
     });
   }
 };
@@ -406,14 +363,7 @@ exports.resetUsers = {
       if (err) throw swe.invalid('user');
       Users.createRandom({n:n}, null, function (err, users, raws) {
         if (err || !users) throw swe.invalid('input');
-        var data = {
-          response: users,
-          durationMS: new Date() - start
-        };
-        if (q_raws) {
-          data.raws = raws;
-        }
-        writeResponse(res, data);
+        writeDataResponse(res, users, q_raws, raws, start);
       });
     });
   }
@@ -456,14 +406,7 @@ exports.friendUser = {
     Users.friendUser(params, {}, function (err, results, raws) {
       if (err) throw swe.invalid('uuid');
       if (!results) throw swe.invalid('user');
-      var data = {
-        response: results,
-        durationMS: new Date() - start
-      };
-      if (q_raws) {
-        data.raws = raws;
-      }
-      writeResponse(res, data);
+      writeDataResponse(res, results, q_raws, raws, start);
     });
   }
 };
@@ -500,14 +443,7 @@ exports.unfriendUser = {
     Users.unfriendUser(params, {}, function (err, results, raws) {
       if (err) throw swe.invalid('uuid');
       if (!results) throw swe.invalid('user');
-      var data = {
-        response: results,
-        durationMS: new Date() - start
-      };
-      if (q_raws) {
-        data.raws = raws;
-      }
-      writeResponse(res, data);
+      writeDataResponse(res, results, q_raws, raws, start);
     });
   }
 };
