@@ -22,6 +22,10 @@ function writeResponse (res, results, q_raws, raws, start) {
   res.send(JSON.stringify(data));
 }
 
+function parseUrl(req, key) {
+  return url.parse(req.url,true).query[key];
+}
+
 function parseRaws (req) {
   return 'true' == url.parse(req.url,true).query["raws"];
 }
@@ -94,7 +98,7 @@ exports.addUser = {
     "method": "POST",
     "responseClass" : "User",
     "params" : [
-      param.body("body", "User name", "newUser"),
+      param.query("name", "User name", "string", true, false),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('input')],
@@ -103,7 +107,8 @@ exports.addUser = {
   'action': function(req, res) {
     var q_raws = parseRaws(req);
     var start = new Date();
-    var name = req.body ? req.body.name : null;
+    var name = parseUrl(req, 'name').trim();
+    // req.body ? req.body.name : null;
     if (!name){
       throw swe.invalid('name');
     } else {

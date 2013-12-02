@@ -136,31 +136,29 @@ var _create = function (params, options, callback) {
 };
 
 // creates many users with cypher
-var _createMany = function (params, options, callback) {
-  var users = _.map(params.users, function (user) {
-    return {
-      id: user.id || uuid(),
-      name: user.name
-    };
-  });
+// var _createMany = function (params, options, callback) {
+//   var users = _.map(params.users, function (user) {
+//     return {
+//       id: user.id || uuid(),
+//       name: user.name
+//     };
+//   });
 
-  var cypher_params = {
-    users: users
-  };
+//   var cypher_params = {
+//     users: users
+//   };
 
-  var query = [
-    'MERGE (user:User {name: {users}.name, id: {users}.id})',
-    'ON CREATE',
-    'SET user.created = timestamp()',
-    'ON MATCH',
-    'SET user.lastLogin = timestamp()',
-    'RETURN user'
-  ].join('\n');
-  console.log(users);
-  console.log(query);
+//   var query = [
+//     'MERGE (user:User {name: {users}.name, id: {users}.id})',
+//     'ON CREATE',
+//     'SET user.created = timestamp()',
+//     'ON MATCH',
+//     'SET user.lastLogin = timestamp()',
+//     'RETURN user'
+//   ].join('\n');
 
-  callback(null, query, cypher_params);
-};
+//   callback(null, query, cypher_params);
+// };
 
 // delete the user and any relationships with cypher
 var _delete = function (params, options, callback) {
