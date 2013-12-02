@@ -14,14 +14,14 @@ function writeResponse (res, data) {
   res.send(JSON.stringify(data));
 }
 
-// function writeResponseEnvelope (res, data) {
-//   var envelope = {
-//     response: data,
-//     extra: 'extra metadata'
-//   };
-//   sw.setHeaders(res);
-//   res.send(JSON.stringify(envelope));
-// }
+function writeResponseEnvelope (res, data, raws) {
+  var envelope = {
+    response: data,
+    raws: raws
+  };
+  sw.setHeaders(res);
+  res.send(JSON.stringify(envelope));
+}
 
 
 /**
@@ -35,15 +35,28 @@ exports.list = {
     "notes" : "Returns all users",
     "summary" : "Find all users",
     "method": "GET",
-    "params" : [],
+    "params" : [
+      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+    ],
     "responseClass" : "List[User]",
     "errorResponses" : [swe.notFound('user')],
     "nickname" : "getUsers"
   },
-  'action': function (req,res) {
-    Users.getAll(null, {}, function (err, users) {
+  'action': function (req, res) {
+    var qraws = url.parse(req.url,true).query["raws"];
+    console.log(qraws);
+    Users.getAll(null, {}, function (err, users, raws) {
       if (err || !users) throw swe.notFound('users');
-      res.send(JSON.stringify(users));
+      if (qraws) {
+        res.send(JSON.stringify({
+          data: users,
+          raws: raws
+        }));
+      } else {
+        res.send(JSON.stringify({
+          data: users
+        }));
+      }
     });
   }
 };
@@ -116,6 +129,58 @@ exports.addUser = {
   }
 };
 
+
+exports.addUsers = {
+  'spec': {
+    "path" : "/users/many",
+    "notes" : "adds many users to the graph",
+    "summary" : "Add many new users to the graph",
+    "method": "POST",
+    "responseClass" : "List[User]",
+    "params" : [param.body("List[User]", "User name", "List[newUser]")],
+    "errorResponses" : [swe.invalid('input')],
+    "nickname" : "addManyUsers"
+  },
+  'action': function(req, res) {
+    // var name = url.parse(req.url,true).query["name"];
+    var users = req.body ? req.body.users : null;
+    if (!users){
+      throw swe.invalid('users');
+    } else {
+      Users.createMany({
+        users: users
+      }, {}, function (err, users) {
+        if (err || !users) throw swe.invalid('input');
+        res.send(JSON.stringify(users));
+      });
+    }
+  }
+};
+
+
+exports.addRandomUsers = {
+  'spec': {
+    "path" : "/users/random/{n}",
+    "notes" : "adds many random users to the graph",
+    "summary" : "Add many random new users to the graph",
+    "method": "POST",
+    "responseClass" : "List[User]",
+    "params" : [param.path("n", "Number of random users to be created", "integer", null, 1)],
+    "errorResponses" : [swe.invalid('input')],
+    "nickname" : "addRandomUsers"
+  },
+  'action': function(req, res) {
+    var n = parseInt(req.params.n);
+    if (!n){
+      throw swe.invalid('input');
+    } else {
+      Users.createRandom({n:n}, null, function (err, users) {
+        if (err || !users) throw swe.invalid('input');
+        res.send(JSON.stringify(users));
+      });
+    }
+  }
+};
 
 
 /**
@@ -248,6 +313,7 @@ exports.deleteAllUsers = {
     "method": "DELETE",
     "summary" : "Removes all users",
     "errorResponses" : [swe.invalid('user')],
+    // "responseClass": 'code', // does this work?
     "nickname" : "deleteAllUsers"
   },
   'action': function(req, res) {
