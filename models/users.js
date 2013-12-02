@@ -50,7 +50,10 @@ var _manyUsers = function (results, callback) {
 
 // returns a user and a friend
 var _singleUserWithFriend = function (results, callback) {
-  callback(null, new User(results[0].user), new User(results[0].friend));
+  callback(null, {
+    user: new User(results[0].user),
+    friend: new User(results[0].friend)
+  });
 };
 
 // returns a user and their friends from a cypher result
