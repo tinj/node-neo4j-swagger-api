@@ -124,7 +124,7 @@ exports.addUsers = {
     "summary" : "Add many new users to the graph",
     "method": "POST",
     "responseClass" : "List[User]",
-    "params" : [param.body("List[User]", "User name", "newUser")],
+    "params" : [param.body("List[User]", "User name", "List[newUser]")],
     "errorResponses" : [swe.invalid('input')],
     "nickname" : "addManyUsers"
   },
@@ -144,6 +144,30 @@ exports.addUsers = {
   }
 };
 
+
+exports.addRandomUsers = {
+  'spec': {
+    "path" : "/users/random/{n}",
+    "notes" : "adds many random users to the graph",
+    "summary" : "Add many random new users to the graph",
+    "method": "POST",
+    "responseClass" : "List[User]",
+    "params" : [param.path("n", "Number of randome users to be created", "Integer")],
+    "errorResponses" : [swe.invalid('input')],
+    "nickname" : "addRandomUsers"
+  },
+  'action': function(req, res) {
+    var n = parseInt(req.params.n);
+    if (!n){
+      throw swe.invalid('input');
+    } else {
+      Users.createRandom({n:n}, null, function (err, users) {
+        if (err || !users) throw swe.invalid('input');
+        res.send(JSON.stringify(users));
+      });
+    }
+  }
+};
 
 
 /**

@@ -9,6 +9,21 @@ var uuid = require('uuid');
 var Cypher = require('../neo4j/cypher');
 var User = require('../models/neo4j/user');
 var async = require('async');
+var randomName = require('random-name');
+
+
+/*
+ *  Utility Functions
+ */
+
+function _randomName () {
+  return randomName.first() + ' ' + randomName.last();
+}
+
+function _randomNames (n) {
+  return _.times(n, _randomName);
+}
+
 
 /**
  *  Result Functions
@@ -17,7 +32,11 @@ var async = require('async');
 
 // return a single user
 var _singleUser = function (results, callback) {
-  callback(null, new User(results[0].user));
+  if (results.length) {
+    callback(null, new User(results[0].user));
+  } else {
+    callback(null, null);
+  }
 };
 
 // return many users
@@ -243,9 +262,22 @@ var create = Cypher(_create, _singleUser);
 
 // create many new users
 var createMany = function (params, options, callback) {
-  async.map(params.users || params.names, function (user, callback) {
-    create(_.pick(user, 'name', 'uuid'), null, callback);
-  }, callback);
+  if (params.names && _.isArray(params.names)) {
+    async.map(params.names, function (name, callback) {
+      create({name: name}, null, callback);
+    }, callback);
+  } else if (params.users && _.isArray(params.users)) {
+    async.map(params.users, function (user, callback) {
+      create(_.pick(user, 'name', 'uuid'), null, callback);
+    }, callback);
+  } else {
+    callback(null, []);
+  }
+};
+
+var createRandom = function (params, options, callback) {
+  var names = _randomNames(params.n || 1);
+  createMany({names: names}, options, callback);
 };
 
 // login a user
@@ -282,6 +314,7 @@ module.exports = {
   updateName: updateName,
   create: create,
   createMany: createMany,
+  createRandom: createRandom,
   login: login,
   getAll: getAll,
   friendUser: friendUser,

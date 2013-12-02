@@ -39,7 +39,8 @@
     "moment": ">=2.4.0",
     "uuid": ">=1.4.1",
     "mocha": ">= 1.6.0",
-    "should": ">= 0.6.3"
+    "should": ">= 0.6.3",
+    "random-name": ">=0.1.0"
   },
   "license": "MIT"
 }
