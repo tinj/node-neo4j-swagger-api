@@ -5,7 +5,7 @@
 
 
 var _ = require('underscore');
-var uuid = require('uuid');
+var uuid = require('hat'); // generates uuids
 var Cypher = require('../neo4j/cypher');
 var User = require('../models/neo4j/user');
 var async = require('async');
@@ -95,19 +95,19 @@ var _matchBy = function (keys, params, options, callback) {
   callback(null, query, cypher_params);
 };
 
-var _matchByUUID = _.partial(_matchBy, ['uuid']);
+var _matchByUUID = _.partial(_matchBy, ['id']);
 var _matchByName = _.partial(_matchBy, ['name']);
 var _matchAll = _.partial(_matchBy, []);
 
 
 var _updateName = function (params, options, callback) {
   var cypher_params = {
-    uuid : params.uuid,
+    id : params.id,
     name : params.name
   };
 
   var query = [
-    'MATCH (user:User {uuid:{uuid}})',
+    'MATCH (user:User {id:{id}})',
     'SET user.name = {name}',
     'RETURN user'
   ].join('\n');
@@ -118,12 +118,12 @@ var _updateName = function (params, options, callback) {
 // creates the user with cypher
 var _create = function (params, options, callback) {
   var cypher_params = {
-    uuid: params.uuid || uuid(),
+    id: params.id || uuid(),
     name: params.name
   };
 
   var query = [
-    'MERGE (user:User {name: {name}, uuid: {uuid}})',
+    'MERGE (user:User {name: {name}, id: {id}})',
     'ON CREATE',
     'SET user.created = timestamp()',
     'ON MATCH',
@@ -138,7 +138,7 @@ var _create = function (params, options, callback) {
 var _createMany = function (params, options, callback) {
   var users = _.map(params.users, function (user) {
     return {
-      uuid: user.uuid || uuid(),
+      id: user.id || uuid(),
       name: user.name
     };
   });
@@ -148,7 +148,7 @@ var _createMany = function (params, options, callback) {
   };
 
   var query = [
-    'MERGE (user:User {name: {users}.name, uuid: {users}.uuid})',
+    'MERGE (user:User {name: {users}.name, id: {users}.id})',
     'ON CREATE',
     'SET user.created = timestamp()',
     'ON MATCH',
@@ -164,11 +164,11 @@ var _createMany = function (params, options, callback) {
 // delete the user and any relationships with cypher
 var _delete = function (params, options, callback) {
   var cypher_params = {
-    uuid: params.uuid
+    id: params.id
   };
 
   var query = [
-    'MATCH (user:User {uuid:{uuid}})',
+    'MATCH (user:User {id:{id}})',
     'OPTIONAL MATCH (user)-[r]-()',
     'DELETE user, r',
   ].join('\n');
@@ -191,12 +191,12 @@ var _deleteAll = function (params, options, callback) {
 // friend the user
 var _friend = function (params, options, callback) {
   var cypher_params = {
-    uuid: params.uuid,
+    id: params.id,
     friend: params.friend
   };
 
   var query = [
-    'MATCH (user:User {uuid:{uuid}}), (friend:User {uuid:{friend}})',
+    'MATCH (user:User {id:{id}}), (friend:User {id:{friend}})',
     'WHERE NOT((user)-[:friend]-(friend))',
     'CREATE (user)-[:friend {created: timestamp()}]->(friend)',
     'RETURN user, friend'
@@ -207,12 +207,12 @@ var _friend = function (params, options, callback) {
 // unfriend the user
 var _unfriend = function (params, options, callback) {
   var cypher_params = {
-    uuid: params.uuid,
+    id: params.id,
     friend: params.friend
   };
 
   var query = [
-    'MATCH (user:User {uuid:{uuid}})-[r:friend]-(friend:User {uuid:{friend}})',
+    'MATCH (user:User {id:{id}})-[r:friend]-(friend:User {id:{friend}})',
     'DELETE r',
     'RETURN user, friend'
   ].join('\n');
@@ -222,11 +222,11 @@ var _unfriend = function (params, options, callback) {
 // match with friends
 var _matchWithFriends = function (params, options, callback) {
   var cypher_params = {
-    uuid: params.uuid
+    id: params.id
   };
 
   var query = [
-    'MATCH (user:User {uuid:{uuid}})',
+    'MATCH (user:User {id:{id}})',
     'OPTIONAL MATCH (user)-[r:friend]-(friend:User)',
     'RETURN user, COLLECT(friend) as friends'
   ].join('\n');
@@ -251,13 +251,13 @@ var _matchAllWithFriends = function (params, options, callback) {
 // exposed functions
 
 
-// get a single user by uuid
-var getByUUID = Cypher(_matchByUUID, _singleUser);
+// get a single user by id
+var getById = Cypher(_matchByUUID, _singleUser);
 
 // get a single user by name
 var getByName = Cypher(_matchByName, _singleUser);
 
-// get a user by uuid and update their name
+// get a user by id and update their name
 var updateName = Cypher(_updateName, _singleUser);
 
 // create a new user
@@ -271,7 +271,7 @@ var createMany = function (params, options, callback) {
     }, callback);
   } else if (params.users && _.isArray(params.users)) {
     async.map(params.users, function (user, callback) {
-      create(_.pick(user, 'name', 'uuid'), null, callback);
+      create(_.pick(user, 'name', 'id'), null, callback);
     }, callback);
   } else {
     callback(null, []);
@@ -289,19 +289,19 @@ var login = create;
 // get all users
 var getAll = Cypher(_matchAll, _manyUsers);
 
-// friend a user by uuid
+// friend a user by id
 var friendUser = Cypher(_friend, _singleUserWithFriend);
 
-// unfriend a user by uuid
+// unfriend a user by id
 var unfriendUser = Cypher(_unfriend, _singleUserWithFriend);
 
-// delete a user by uuid
+// delete a user by id
 var deleteUser = Cypher(_delete);
 
-// delete a user by uuid
+// delete a user by id
 var deleteAllUsers = Cypher(_deleteAll);
 
-// get a single user by uuid and all friends
+// get a single user by id and all friends
 var getWithFriends = Cypher(_matchWithFriends, _singleUserWithFriends);
 
 // get all users and all friends
@@ -312,7 +312,7 @@ var getAllWithFriends = Cypher(_matchAllWithFriends, _manyUsersWithFriends);
 // export exposed functions
 
 module.exports = {
-  getByUUID: getByUUID,
+  getById: getById,
   getByName: getByName,
   updateName: updateName,
   create: create,
