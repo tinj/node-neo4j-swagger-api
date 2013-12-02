@@ -372,13 +372,13 @@ exports.resetUsers = {
 
 exports.friendUser = {
   'spec': {
-    "path" : "/users/{id}/friend/{friend}",
+    "path" : "/users/{id}/friend/{friend_id}",
     "notes" : "friends a user by ID",
     "method": "POST",
     "summary" : "Friend an existing user",
     "params" : [
       param.path("id", "ID of the user", "string"),
-      param.path("friend", "ID of the user to be friended", "string"),
+      param.path("friend_id", "ID of the user to be friended", "string"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
@@ -388,16 +388,16 @@ exports.friendUser = {
     var q_raws = parseRaws(req);
     var start = new Date();
     var id = req.params.id;
-    var friend = req.params.friend;
-    if (!id || !friend){
+    var friend_id = req.params.friend_id;
+    if (!id || !friend_id){
       throw swe.invalid('user');
     }
-    if (friend == id) {
-      throw swe.invalid('friend');
+    if (friend_id == id) {
+      throw swe.invalid('friend_id');
     }
     var params = {
       id: id,
-      friend: friend
+      friend_id: friend_id
     };
     Users.friendUser(params, {}, function (err, results, raws) {
       if (err) throw swe.invalid('id');
@@ -409,13 +409,13 @@ exports.friendUser = {
 
 exports.unfriendUser = {
   'spec': {
-    "path" : "/users/{id}/unfriend/{friend}",
+    "path" : "/users/{id}/unfriend/{friend_id}",
     "notes" : "unfriend a user by ID",
     "method": "POST",
     "summary" : "Unfriend an existing user",
     "params" : [
       param.path("id", "ID of the user", "string"),
-      param.path("friend", "ID of the user to be unfriended", "string"),
+      param.path("friend_id", "ID of the user to be unfriended", "string"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
@@ -425,16 +425,16 @@ exports.unfriendUser = {
     var q_raws = parseRaws(req);
     var start = new Date();
     var id = req.params.id;
-    var friend = req.params.friend;
-    if (!id || !friend){
+    var friend_id = req.params.friend_id;
+    if (!id || !friend_id){
       throw swe.invalid('user');
     }
-    if (friend == id) {
-      throw swe.invalid('friend');
+    if (friend_id == id) {
+      throw swe.invalid('friend_id');
     }
     var params = {
       id: id,
-      friend: friend
+      friend_id: friend_id
     };
     Users.unfriendUser(params, {}, function (err, results, raws) {
       if (err) throw swe.invalid('id');
