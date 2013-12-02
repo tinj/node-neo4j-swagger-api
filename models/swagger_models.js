@@ -70,7 +70,7 @@ module.exports = {
     "id":"User",
     // "required": ["id"],
     "properties":{
-      "uuid":{
+      "id":{
         "type":"string"
       },
       "name":{

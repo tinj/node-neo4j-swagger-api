@@ -7,14 +7,10 @@ var sw = require("swagger-node-express");
 var param = sw.params;
 var url = require("url");
 var swe = sw.errors;
-var _ = require('underscore');
+// var _ = require('underscore');
 
-function writeResponse (res, data) {
-  sw.setHeaders(res);
-  res.send(JSON.stringify(data));
-}
 
-function writeDataResponse (res, results, q_raws, raws, start) {
+function writeResponse (res, results, q_raws, raws, start) {
   sw.setHeaders(res);
   var data = {
     response: results,
@@ -60,7 +56,7 @@ exports.list = {
     Users.getAll(null, {}, function (err, users, raws) {
       if (err || !users) throw swe.notFound('users');
 
-      writeDataResponse(res, users, q_raws, raws, start);
+      writeResponse(res, users, q_raws, raws, start);
     });
   }
 };
@@ -84,7 +80,7 @@ exports.listWithFriends = {
     var start = new Date();
     Users.getAllWithFriends(null, {}, function (err, users, raws) {
       if (err || !users) throw swe.notFound('users');
-      writeDataResponse(res, users, q_raws, raws, start);
+      writeResponse(res, users, q_raws, raws, start);
     });
   }
 };
@@ -98,7 +94,7 @@ exports.addUser = {
     "method": "POST",
     "responseClass" : "User",
     "params" : [
-      param.body("User", "User name", "newUser"),
+      param.body("body", "User name", "newUser"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('input')],
@@ -115,7 +111,7 @@ exports.addUser = {
         name: name
       }, {}, function (err, user, raws) {
         if (err || !user) throw swe.invalid('input');
-        writeDataResponse(res, user, q_raws, raws, start);
+        writeResponse(res, user, q_raws, raws, start);
       });
     }
   }
@@ -130,7 +126,7 @@ exports.addUsers = {
     "method": "POST",
     "responseClass" : "List[User]",
     "params" : [
-      param.body("List[User]", "User name", "List[newUser]"),
+      param.body("body", "User name", "List[newUser]"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('input')],
@@ -147,7 +143,7 @@ exports.addUsers = {
         users: users
       }, {}, function (err, users, raws) {
         if (err || !users) throw swe.invalid('input');
-        writeDataResponse(res, users, q_raws, raws, start);
+        writeResponse(res, users, q_raws, raws, start);
       });
     }
   }
@@ -177,7 +173,7 @@ exports.addRandomUsers = {
     } else {
       Users.createRandom({n:n}, null, function (err, users, raws) {
         if (err || !users) throw swe.invalid('input');
-        writeDataResponse(res, users, q_raws, raws, start);
+        writeResponse(res, users, q_raws, raws, start);
       });
     }
   }
@@ -185,33 +181,33 @@ exports.addRandomUsers = {
 
 
 /**
- * GET /users/:uuid
+ * GET /users/:id
  */
 
 exports.findById = {
   'spec': {
     "description" : "Operations about users",
-    "path" : "/users/{uuid}",
-    "notes" : "Returns a user based on UUID",
-    "summary" : "Find user by UUID",
+    "path" : "/users/{id}",
+    "notes" : "Returns a user based on ID",
+    "summary" : "Find user by ID",
     "method": "GET",
     "params" : [
-      param.path("uuid", "UUID of user that needs to be fetched", "string"),
+      param.path("id", "ID of user that needs to be fetched", "string"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "User",
-    "errorResponses" : [swe.invalid('uuid'), swe.notFound('user')],
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
     "nickname" : "getUserById"
   },
   'action': function (req,res) {
-    var uuid = req.params.uuid;
+    var id = req.params.id;
     var q_raws = parseRaws(req);
     var start = new Date();
-    if (!uuid) throw swe.invalid('uuid');
+    if (!id) throw swe.invalid('id');
 
-    Users.getByUUID({uuid: uuid}, {}, function (err, user, raws) {
+    Users.getById({id: id}, {}, function (err, user, raws) {
       if (err) throw swe.notFound('user');
-      writeDataResponse(res, user, q_raws, raws, start);
+      writeResponse(res, user, q_raws, raws, start);
     });
   }
 };
@@ -219,27 +215,27 @@ exports.findById = {
 exports.findByIdWithFriends = {
   'spec': {
     "description" : "Operations about users",
-    "path" : "/users/{uuid}/friends",
+    "path" : "/users/{id}/friends",
     "notes" : "Returns a user based on ID",
     "summary" : "Find user by ID",
     "method": "GET",
     "params" : [
-      param.path("uuid", "ID of user that needs to be fetched", "string"),
+      param.path("id", "ID of user that needs to be fetched", "string"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "User",
-    "errorResponses" : [swe.invalid('uuid'), swe.notFound('user')],
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
     "nickname" : "getByIdWithFriends"
   },
   'action': function (req,res) {
-    var uuid = req.params.uuid;
+    var id = req.params.id;
     var q_raws = parseRaws(req);
     var start = new Date();
-    if (!uuid) throw swe.invalid('uuid');
+    if (!id) throw swe.invalid('id');
 
-    Users.getWithFriends({uuid: uuid}, {}, function (err, user, raws) {
+    Users.getWithFriends({id: id}, {}, function (err, user, raws) {
       if (err) throw swe.notFound('user');
-      writeDataResponse(res, user, q_raws, raws, start);
+      writeResponse(res, user, q_raws, raws, start);
     });
   }
 };
@@ -251,62 +247,62 @@ exports.findByIdWithFriends = {
 
 exports.updateUser = {
   'spec': {
-    "path" : "/users/{uuid}",
+    "path" : "/users/{id}",
     "notes" : "updates a user name",
     "method": "PUT",
     "summary" : "Update an existing user",
     "params" : [
-      param.path("uuid", "ID of user that needs to be fetched", "string"),
-      param.body("User", "User object that needs to be updated", "User"),
+      param.path("id", "ID of user that needs to be fetched", "string"),
+      param.body("body", "User object that needs to be updated", "User"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
-    "errorResponses" : [swe.invalid('uuid'), swe.notFound('user'), swe.invalid('input')],
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "updateUser"
   },
   'action': function(req, res) {
     var q_raws = parseRaws(req);
     var start = new Date();
     var body = req.body;
-    var uuid = req.params.uuid;
-    if (!body || !uuid || !body.name){
+    var id = req.params.id;
+    if (!body || !id || !body.name){
       throw swe.invalid('user');
     }
     var params = {
-      uuid: uuid,
+      id: id,
       name: body.name
     };
     Users.updateName(params, {}, function (err, user, raws) {
-      if (err) throw swe.invalid('uuid');
+      if (err) throw swe.invalid('id');
       if (!user) throw swe.invalid('user');
-      writeDataResponse(res, user, q_raws, raws, start);
+      writeResponse(res, user, q_raws, raws, start);
     });
   }
 };
 
 /**
- * DELETE /user/:uuid
+ * DELETE /user/:id
  */
 
 exports.deleteUser = {
   'spec': {
-    "path" : "/users/{uuid}",
+    "path" : "/users/{id}",
     "notes" : "removes a user from the db",
     "method": "DELETE",
     "summary" : "Remove an existing user",
     "params" : [
-      param.path("uuid", "UUID of user that needs to be removed", "string"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.path("id", "ID of user that needs to be removed", "string"),
+      // param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
-    "errorResponses" : [swe.invalid('uuid'), swe.notFound('user')],
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
     "nickname" : "deleteUser"
   },
   'action': function(req, res) {
-    var uuid = req.params.uuid;
-    var q_raws = parseRaws(req);
-    var start = new Date();
-    if (!uuid) throw swe.invalid('uuid');
+    var id = req.params.id;
+    // var q_raws = parseRaws(req);
+    // var start = new Date();
+    if (!id) throw swe.invalid('id');
 
-    Users.deleteUser({uuid: uuid}, {}, function (err) {
+    Users.deleteUser({id: id}, {}, function (err) {
       if (err) throw swe.invalid('user');
       res.send(200);
     });
@@ -315,7 +311,7 @@ exports.deleteUser = {
 
 
 /**
- * DELETE /user/:uuid
+ * DELETE /user/:id
  */
 
 exports.deleteAllUsers = {
@@ -326,14 +322,14 @@ exports.deleteAllUsers = {
     "summary" : "Removes all users",
     "errorResponses" : [swe.invalid('user')],
     "params" : [
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      // param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     // "responseClass": 'code', // does this work?
     "nickname" : "deleteAllUsers"
   },
   'action': function(req, res) {
-    var q_raws = parseRaws(req);
-    var start = new Date();
+    // var q_raws = parseRaws(req);
+    // var start = new Date();
     Users.deleteAllUsers(null, null, function (err) {
       if (err) throw swe.invalid('user');
       res.send(200); // is this working? swagger isn't acknowledging this
@@ -363,7 +359,7 @@ exports.resetUsers = {
       if (err) throw swe.invalid('user');
       Users.createRandom({n:n}, null, function (err, users, raws) {
         if (err || !users) throw swe.invalid('input');
-        writeDataResponse(res, users, q_raws, raws, start);
+        writeResponse(res, users, q_raws, raws, start);
       });
     });
   }
@@ -376,74 +372,74 @@ exports.resetUsers = {
 
 exports.friendUser = {
   'spec': {
-    "path" : "/users/{uuid}/friend/{friend}",
-    "notes" : "friends a user by UUID",
+    "path" : "/users/{id}/friend/{friend}",
+    "notes" : "friends a user by ID",
     "method": "POST",
     "summary" : "Friend an existing user",
     "params" : [
-      param.path("uuid", "UUID of the user", "string"),
-      param.path("friend", "UUID of the user to be friended", "string"),
+      param.path("id", "ID of the user", "string"),
+      param.path("friend", "ID of the user to be friended", "string"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
-    "errorResponses" : [swe.invalid('uuid'), swe.notFound('user'), swe.invalid('input')],
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "friendUser"
   },
   'action': function(req, res) {
     var q_raws = parseRaws(req);
     var start = new Date();
-    var uuid = req.params.uuid;
+    var id = req.params.id;
     var friend = req.params.friend;
-    if (!uuid || !friend){
+    if (!id || !friend){
       throw swe.invalid('user');
     }
-    if (friend == uuid) {
+    if (friend == id) {
       throw swe.invalid('friend');
     }
     var params = {
-      uuid: uuid,
+      id: id,
       friend: friend
     };
     Users.friendUser(params, {}, function (err, results, raws) {
-      if (err) throw swe.invalid('uuid');
+      if (err) throw swe.invalid('id');
       if (!results) throw swe.invalid('user');
-      writeDataResponse(res, results, q_raws, raws, start);
+      writeResponse(res, results, q_raws, raws, start);
     });
   }
 };
 
 exports.unfriendUser = {
   'spec': {
-    "path" : "/users/{uuid}/unfriend/{friend}",
-    "notes" : "unfriend a user by UUID",
+    "path" : "/users/{id}/unfriend/{friend}",
+    "notes" : "unfriend a user by ID",
     "method": "POST",
     "summary" : "Unfriend an existing user",
     "params" : [
-      param.path("uuid", "UUID of the user", "string"),
-      param.path("friend", "UUID of the user to be unfriended", "string"),
+      param.path("id", "ID of the user", "string"),
+      param.path("friend", "ID of the user to be unfriended", "string"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
-    "errorResponses" : [swe.invalid('uuid'), swe.notFound('user'), swe.invalid('input')],
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "unfriendUser"
   },
   'action': function(req, res) {
     var q_raws = parseRaws(req);
     var start = new Date();
-    var uuid = req.params.uuid;
+    var id = req.params.id;
     var friend = req.params.friend;
-    if (!uuid || !friend){
+    if (!id || !friend){
       throw swe.invalid('user');
     }
-    if (friend == uuid) {
+    if (friend == id) {
       throw swe.invalid('friend');
     }
     var params = {
-      uuid: uuid,
+      id: id,
       friend: friend
     };
     Users.unfriendUser(params, {}, function (err, results, raws) {
-      if (err) throw swe.invalid('uuid');
+      if (err) throw swe.invalid('id');
       if (!results) throw swe.invalid('user');
-      writeDataResponse(res, results, q_raws, raws, start);
+      writeResponse(res, results, q_raws, raws, start);
     });
   }
 };

@@ -6,7 +6,7 @@
 
 var _ = require('underscore');
 var _s = require('underscore.string');
-var uuid = require('uuid');
+var uuid = require('hat');
 var Cypher = require('../neo4j/cypher');
 var Pet = require('../models/neo4j/pet');
 var Category = require('../models/neo4j/category');
