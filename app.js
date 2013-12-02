@@ -109,7 +109,7 @@ swagger.addModels(models)
 
 // Configures the app's base path and api version.
 console.log(BASE_URL+API_STRING);
-swagger.configure(BASE_URL+API_STRING, "0.0.5");
+swagger.configure(BASE_URL+API_STRING, "0.0.6");
 
 
 // Routes
