@@ -97,17 +97,18 @@ swagger.addModels(models)
   .addDelete(routes.users.deleteUser)
   .addDelete(routes.users.deleteAllUsers)
 
-  .addGet(routes.pets.findByTags)
-  .addGet(routes.pets.findByStatus)
-  .addGet(routes.pets.findById)
-  .addPost(routes.pets.addPet)
-  .addPut(routes.pets.updatePet)
-  .addDelete(routes.pets.deletePet);
+  // .addGet(routes.pets.findByTags)
+  // .addGet(routes.pets.findByStatus)
+  // .addGet(routes.pets.findById)
+  // .addPost(routes.pets.addPet)
+  // .addPut(routes.pets.updatePet)
+  // .addDelete(routes.pets.deletePet)
+  ;
 
 
 // Configures the app's base path and api version.
 console.log(BASE_URL+API_STRING);
-swagger.configure(BASE_URL+API_STRING, "0.1");
+swagger.configure(BASE_URL+API_STRING, "0.0.5");
 
 
 // Routes
