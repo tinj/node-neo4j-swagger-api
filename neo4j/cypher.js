@@ -1,7 +1,9 @@
 // neo4j cypher helper module
 
-var db = require('./index')
-, _ = require('underscore')
+
+var neo4j = require('neo4j'),
+    db = new neo4j.GraphDatabase(process.env.NEO4J_URL || 'http://localhost:7474'),
+    _ = require('underscore')
 ;
 
 // Cypher
