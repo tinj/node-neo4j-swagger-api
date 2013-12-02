@@ -14,14 +14,14 @@ function writeResponse (res, data) {
   res.send(JSON.stringify(data));
 }
 
-// function writeResponseEnvelope (res, data) {
-//   var envelope = {
-//     response: data,
-//     extra: 'extra metadata'
-//   };
-//   sw.setHeaders(res);
-//   res.send(JSON.stringify(envelope));
-// }
+function writeResponseEnvelope (res, data, raws) {
+  var envelope = {
+    response: data,
+    raws: raws
+  };
+  sw.setHeaders(res);
+  res.send(JSON.stringify(envelope));
+}
 
 
 /**
@@ -35,15 +35,28 @@ exports.list = {
     "notes" : "Returns all users",
     "summary" : "Find all users",
     "method": "GET",
-    "params" : [],
+    "params" : [
+      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+    ],
     "responseClass" : "List[User]",
     "errorResponses" : [swe.notFound('user')],
     "nickname" : "getUsers"
   },
-  'action': function (req,res) {
-    Users.getAll(null, {}, function (err, users) {
+  'action': function (req, res) {
+    var qraws = url.parse(req.url,true).query["raws"];
+    console.log(qraws);
+    Users.getAll(null, {}, function (err, users, raws) {
       if (err || !users) throw swe.notFound('users');
-      res.send(JSON.stringify(users));
+      if (qraws) {
+        res.send(JSON.stringify({
+          data: users,
+          raws: raws
+        }));
+      } else {
+        res.send(JSON.stringify({
+          data: users
+        }));
+      }
     });
   }
 };
@@ -152,7 +165,7 @@ exports.addRandomUsers = {
     "summary" : "Add many random new users to the graph",
     "method": "POST",
     "responseClass" : "List[User]",
-    "params" : [param.path("n", "Number of randome users to be created", "Integer")],
+    "params" : [param.path("n", "Number of random users to be created", "integer", null, 1)],
     "errorResponses" : [swe.invalid('input')],
     "nickname" : "addRandomUsers"
   },
