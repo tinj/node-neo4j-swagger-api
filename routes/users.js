@@ -324,7 +324,28 @@ exports.deleteAllUsers = {
   }
 };
 
-
+exports.resetUsers = {
+  'spec': {
+    "path" : "/users/reset",
+    "notes" : "removes all users from the db and adds n random users",
+    "method": "POST",
+    "summary" : "Removes all users and then adds n random users",
+    "errorResponses" : [swe.invalid('user')],
+    "responseClass" : "List[User]",
+    "params" : [param.query("n", "Number of random users to be created", "integer", null, null, null, 10)],
+    "nickname" : "resetUsers"
+  },
+  'action': function(req, res) {
+    var n = parseInt(url.parse(req.url,true).query["n"]) || 10;
+    Users.deleteAllUsers(null, null, function (err) {
+      if (err) throw swe.invalid('user');
+      Users.createRandom({n:n}, null, function (err, users) {
+        if (err || !users) throw swe.invalid('input');
+        res.send(JSON.stringify(users));
+      });
+    });
+  }
+};
 
 
 /**
