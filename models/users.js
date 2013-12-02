@@ -192,11 +192,11 @@ var _deleteAll = function (params, options, callback) {
 var _friend = function (params, options, callback) {
   var cypher_params = {
     id: params.id,
-    friend: params.friend
+    friend_id: params.friend_id
   };
 
   var query = [
-    'MATCH (user:User {id:{id}}), (friend:User {id:{friend}})',
+    'MATCH (user:User {id:{id}}), (friend:User {id:{friend_id}})',
     'WHERE NOT((user)-[:friend]-(friend))',
     'CREATE (user)-[:friend {created: timestamp()}]->(friend)',
     'RETURN user, friend'
@@ -208,11 +208,11 @@ var _friend = function (params, options, callback) {
 var _unfriend = function (params, options, callback) {
   var cypher_params = {
     id: params.id,
-    friend: params.friend
+    friend_id: params.friend_id
   };
 
   var query = [
-    'MATCH (user:User {id:{id}})-[r:friend]-(friend:User {id:{friend}})',
+    'MATCH (user:User {id:{id}})-[r:friend]-(friend:User {id:{friend_id}})',
     'DELETE r',
     'RETURN user, friend'
   ].join('\n');
