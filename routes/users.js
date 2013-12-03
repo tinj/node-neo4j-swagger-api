@@ -10,6 +10,10 @@ var swe = sw.errors;
 var _ = require('underscore');
 
 
+/*
+ *  Util Functions
+ */
+
 function writeResponse (res, response, start) {
   sw.setHeaders(res);
   response.durationMS = new Date() - start;
@@ -20,10 +24,14 @@ function parseUrl(req, key) {
   return url.parse(req.url,true).query[key];
 }
 
-function parseRaws (req) {
-  return 'true' == url.parse(req.url,true).query["raws"];
+function parseBool (req, key) {
+  return 'true' == url.parse(req.url,true).query[key];
 }
 
+
+/*
+ * API Specs and Functions
+ */
 
 exports.list = {
   'spec': {
@@ -33,6 +41,7 @@ exports.list = {
     "summary" : "Find all users",
     "method": "GET",
     "params" : [
+      param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "List[User]",
@@ -40,15 +49,23 @@ exports.list = {
     "nickname" : "getUsers"
   },
   'action': function (req, res) {
+    var friends = parseBool(req, 'friends');
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
-    Users.getAll(null, options, function (err, response) {
-      if (err || !response.results) throw swe.notFound('users');
 
-      writeResponse(res, response, start);
-    });
+    if (friends) {
+      Users.getAllWithFriends(null, options, function (err, response) {
+        if (err || !response.results) throw swe.notFound('users');
+        writeResponse(res, response, start);
+      });
+    } else {
+      Users.getAll(null, options, function (err, response) {
+        if (err || !response.results) throw swe.notFound('users');
+        writeResponse(res, response, start);
+      });
+    }
   }
 };
 
@@ -67,9 +84,8 @@ exports.userCount = {
     "nickname" : "userCount"
   },
   'action': function (req, res) {
-    console.log('userCount');
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
     Users.getAllCount(null, options, function (err, response) {
@@ -78,33 +94,6 @@ exports.userCount = {
     });
   }
 };
-
-exports.listWithFriends = {
-  'spec': {
-    "description" : "List all users",
-    "path" : "/users/friends",
-    "notes" : "Returns all users and their friends",
-    "summary" : "Find all users and their friends",
-    "method": "GET",
-    "params" : [
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
-    ],
-    "responseClass" : "List[User]",
-    "errorResponses" : [swe.notFound('user')],
-    "nickname" : "getUsersWithFriends"
-  },
-  'action': function (req,res) {
-    var options = {
-      raws: parseRaws(req)
-    };
-    var start = new Date();
-    Users.getAllWithFriends(null, options, function (err, response) {
-      if (err || !response.results) throw swe.notFound('users');
-      writeResponse(res, response, start);
-    });
-  }
-};
-
 
 exports.addUser = {
   'spec': {
@@ -122,11 +111,10 @@ exports.addUser = {
   },
   'action': function(req, res) {
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
     var names = _.invoke(parseUrl(req, 'name').split(','), 'trim');
-    // req.body ? req.body.name : null;
     if (!names.length){
       throw swe.invalid('name');
     } else {
@@ -157,10 +145,10 @@ exports.addRandomUsers = {
   },
   'action': function(req, res) {
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
-    var n = parseInt(req.params.n);
+    var n = parseInt(req.params.n, 10);
     if (!n){
       throw swe.invalid('input');
     } else {
@@ -182,22 +170,45 @@ exports.findById = {
     "method": "GET",
     "params" : [
       param.path("id", "ID of user that needs to be fetched", "string"),
+      param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true"),
+      param.query("fof", "Include friends of friends", "boolean", false, false, "LIST[true, false]", "false"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "User",
-    "errorResponses" : [swe.notFound('user')],
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
     "nickname" : "getUserById"
   },
   'action': function (req,res) {
+    var id = req.params.id;
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
+    var friends = parseBool(req, 'friends');
+    var fof = 'true' == parseUrl(req, 'fof');
 
-    Users.getById({id: id}, options, function (err, response) {
+    if (!id) throw swe.invalid('id');
+
+    var params = {
+      id: id
+    };
+
+    var callback = function (err, response) {
       if (err) throw swe.notFound('user');
       writeResponse(res, response, start);
-    });
+    };
+
+    if (friends) {
+      if (fof) {
+        Users.getWithFriendsAndFOF(params, options, callback);
+      } else {
+        Users.getWithFriends(params, options, callback);
+      }
+    } else if (fof) {
+      Users.getWithFOF(params, options, callback);
+    } else {
+      Users.getById(params, options, callback);
+    }
   }
 };
 
@@ -210,6 +221,7 @@ exports.getRandom = {
     "method": "GET",
     "params" : [
       param.path("n", "Number of random users get", "integer", null, 1),
+      param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "User",
@@ -219,136 +231,25 @@ exports.getRandom = {
   'action': function (req,res) {
     var n = req.params.n;
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
+    var friends = parseBool(req, 'friends');
 
-    Users.getRandom({n: n}, options, function (err, response) {
-      if (err) throw swe.notFound('users');
-      writeResponse(res, response, start);
-    });
+    if (friends) {
+      Users.getRandomWithFriends({n: n}, options, function (err, response) {
+        if (err) throw swe.notFound('users');
+        writeResponse(res, response, start);
+      });
+    } else {
+      Users.getRandom({n: n}, options, function (err, response) {
+        if (err) throw swe.notFound('users');
+        writeResponse(res, response, start);
+      });
+    }
   }
 };
 
-exports.getRandomWithFriends = {
-  'spec': {
-    "description" : "get random users with friends",
-    "path" : "/users/random/{n}/friends",
-    "notes" : "Returns n random users with friends",
-    "summary" : "get random users with friends",
-    "method": "GET",
-    "params" : [
-      param.path("n", "Number of random users get", "integer", null, 1),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
-    ],
-    "responseClass" : "User",
-    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
-    "nickname" : "getRandomUsers"
-  },
-  'action': function (req,res) {
-    var n = req.params.n;
-    var options = {
-      raws: parseRaws(req)
-    };
-    var start = new Date();
-
-    Users.getRandomWithFriends({n: n}, options, function (err, response) {
-      if (err) throw swe.notFound('users');
-      writeResponse(res, response, start);
-    });
-  }
-};
-
-exports.findByIdWithFriends = {
-  'spec': {
-    "description" : "find a user and their friends",
-    "path" : "/users/{id}/friends",
-    "notes" : "Returns a user based on ID with friends",
-    "summary" : "Find user by ID with friends",
-    "method": "GET",
-    "params" : [
-      param.path("id", "ID of user that needs to be fetched", "string"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
-    ],
-    "responseClass" : "User",
-    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
-    "nickname" : "getByIdWithFriends"
-  },
-  'action': function (req,res) {
-    var id = req.params.id;
-    var options = {
-      raws: parseRaws(req)
-    };
-    var start = new Date();
-    if (!id) throw swe.invalid('id');
-
-    Users.getWithFriends({id: id}, options, function (err, response) {
-      if (err) throw swe.notFound('user');
-      writeResponse(res, response, start);
-    });
-  }
-};
-
-
-exports.getWithFriendsAndFOF = {
-  'spec': {
-    "description" : "find a user and their friends and friends of friends",
-    "path" : "/users/{id}/friends/fof",
-    "notes" : "Returns a user based on ID with friends and friends of friends",
-    "summary" : "Find user by ID with friends and friends of friends",
-    "method": "GET",
-    "params" : [
-      param.path("id", "ID of user that needs to be fetched", "string"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
-    ],
-    "responseClass" : "User",
-    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
-    "nickname" : "getByIdWithFriendsAndFOF"
-  },
-  'action': function (req,res) {
-    var id = req.params.id;
-    var options = {
-      raws: parseRaws(req)
-    };
-    var start = new Date();
-    if (!id) throw swe.invalid('id');
-
-    Users.getWithFriendsAndFOF({id: id}, options, function (err, response) {
-      if (err) throw swe.notFound('user');
-      writeResponse(res, response, start);
-    });
-  }
-};
-
-exports.getWithFOF = {
-  'spec': {
-    "description" : "find a user and their friends of friends",
-    "path" : "/users/{id}/fof",
-    "notes" : "Returns a user based on ID with friends of friends",
-    "summary" : "Find user by ID with friends of friends",
-    "method": "GET",
-    "params" : [
-      param.path("id", "ID of user that needs to be fetched", "string"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
-    ],
-    "responseClass" : "User",
-    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
-    "nickname" : "getByIdWithFOF"
-  },
-  'action': function (req,res) {
-    var id = req.params.id;
-    var options = {
-      raws: parseRaws(req)
-    };
-    var start = new Date();
-    if (!id) throw swe.invalid('id');
-
-    Users.getWithFOF({id: id}, options, function (err, response) {
-      if (err) throw swe.notFound('user');
-      writeResponse(res, response, start);
-    });
-  }
-};
 
 exports.updateUser = {
   'spec': {
@@ -365,9 +266,8 @@ exports.updateUser = {
     "nickname" : "updateUser"
   },
   'action': function(req, res) {
-    console.log('updateUser');
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
     var name = parseUrl(req, 'name').trim();
@@ -417,10 +317,6 @@ exports.deleteUser = {
 };
 
 
-/**
- * DELETE /user/:id
- */
-
 exports.deleteAllUsers = {
   'spec': {
     "path" : "/users",
@@ -446,7 +342,7 @@ exports.deleteAllUsers = {
 exports.resetUsers = {
   'spec': {
     "path" : "/users",
-    "notes" : "removes all users from the db and adds n random users",
+    "notes" : "Resets the graph with new users and friendships",
     "method": "PUT",
     "summary" : "Removes all users and then adds n random users",
     "errorResponses" : [swe.invalid('user'), swe.invalid('input')],
@@ -460,7 +356,7 @@ exports.resetUsers = {
   },
   'action': function(req, res) {
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
     var n = parseInt(parseUrl(req, 'n'), 10) || 10;
@@ -490,7 +386,7 @@ exports.friendUser = {
   },
   'action': function(req, res) {
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
     var id = req.params.id;
@@ -529,7 +425,7 @@ exports.manyRandomFriendships = {
   },
   'action': function(req, res) {
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
     var n = parseInt(req.params.n, 10) || 1;
@@ -559,7 +455,7 @@ exports.friendRandomUser = {
   },
   'action': function(req, res) {
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
     var id = req.params.id;
@@ -595,7 +491,7 @@ exports.unfriendUser = {
   },
   'action': function(req, res) {
     var options = {
-      raws: parseRaws(req)
+      raws: parseBool(req, 'raws')
     };
     var start = new Date();
     var id = req.params.id;
