@@ -78,6 +78,18 @@ var _manyUsersWithFriends = function (results, callback) {
   callback(null, users);
 };
 
+// return a count
+var _singleCount = function (results, callback) {
+  if (results.length) {
+    callback(null, {
+      count: results[0].c || 0
+    });
+  } else {
+    callback(null, null);
+  }
+};
+
+
 /**
  *  Query Functions
  *  to be combined with result functions using _.partial()
@@ -129,6 +141,18 @@ var _getRandomWithFriends = function (params, options, callback) {
     'LIMIT {n}',
     'OPTIONAL MATCH (user)-[r:friend]-(friend:User)',
     'RETURN user, COLLECT(friend) as friends'
+  ].join('\n');
+
+  callback(null, query, cypher_params);
+};
+
+
+var _getAllCount = function (params, options, callback) {
+  var cypher_params = {};
+
+  var query = [
+    'MATCH (user:User)',
+    'RETURN COUNT(user) as c'
   ].join('\n');
 
   callback(null, query, cypher_params);
@@ -350,6 +374,9 @@ var login = create;
 // get all users
 var getAll = Cypher(_matchAll, _manyUsers);
 
+// get all users count
+var getAllCount = Cypher(_getAllCount, _singleCount);
+
 // friend a user by id
 var friendUser = Cypher(_friend, _singleUserWithFriend);
 
@@ -448,6 +475,7 @@ module.exports = {
   createRandom: createRandom,
   login: login,
   getAll: getAll,
+  getAllCount: getAllCount,
   friendUser: friendUser,
   friendRandomUser: friendRandomUser,
   manyFriendships: manyFriendships,

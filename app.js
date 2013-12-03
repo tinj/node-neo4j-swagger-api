@@ -85,6 +85,7 @@ var models = require("./models/swagger_models");
 // Add models and methods to swagger
 swagger.addModels(models)
   .addGet(routes.users.list)
+  .addGet(routes.users.userCount)
   .addGet(routes.users.listWithFriends)
   .addGet(routes.users.findById)
   .addGet(routes.users.getRandom)

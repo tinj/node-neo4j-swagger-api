@@ -36,7 +36,7 @@ exports.list = {
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "List[User]",
-    "errorResponses" : [swe.notFound('user')],
+    "errorResponses" : [swe.notFound('users')],
     "nickname" : "getUsers"
   },
   'action': function (req, res) {
@@ -47,6 +47,33 @@ exports.list = {
     Users.getAll(null, options, function (err, response) {
       if (err || !response.results) throw swe.notFound('users');
 
+      writeResponse(res, response, start);
+    });
+  }
+};
+
+exports.userCount = {
+  'spec': {
+    "description" : "User count",
+    "path" : "/users/count",
+    "notes" : "User count",
+    "summary" : "user count",
+    "method": "GET",
+    "params" : [
+      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+    ],
+    "responseClass" : "Count",
+    "errorResponses" : [swe.notFound('users')],
+    "nickname" : "userCount"
+  },
+  'action': function (req, res) {
+    console.log('userCount');
+    var options = {
+      raws: parseRaws(req)
+    };
+    var start = new Date();
+    Users.getAllCount(null, options, function (err, response) {
+      // if (err || !response.results) throw swe.notFound('users');
       writeResponse(res, response, start);
     });
   }

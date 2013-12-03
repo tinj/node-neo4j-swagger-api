@@ -25,6 +25,14 @@ module.exports = {
       }
     }
   },
+  "Count":{
+    "id":"Count",
+    "properties": {
+      "count":{
+        "type":"integer"
+      }
+    }
+  },
   "Pet":{
     "id":"Pet",
     "properties":{
