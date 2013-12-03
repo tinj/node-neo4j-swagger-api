@@ -1,6 +1,6 @@
 {
   "name": "neo4j-swagger-api",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "author": {
     "name": "Mat Tyndall",
     "email": "mat@tinj.com",
@@ -22,7 +22,7 @@
     "server"
   ],
   "engines": {
-    "node": ">= 0.10.x",
+    "node": "0.10.x",
     "npm": "1.2.x"
   },
   "dependencies": {
