@@ -72,7 +72,7 @@ var _singleUserWithFriends = function (results, callback) {
   callback(null, _parseUserWithFriends(results[0]));
 };
 
-// returns a user and their friends
+// returns a user and their friends and friends of friends
 var _singleUserWithFriendsAndFOF = function (results, callback) {
   if (!results.length) return callback();
 
@@ -86,6 +86,17 @@ var _singleUserWithFriendsAndFOF = function (results, callback) {
       return friend;
     }
   }).compact().value();
+  callback(null, user);
+};
+
+// returns a user and their friends of friends
+var _singleUserWithFOF = function (results, callback) {
+  if (!results.length) return callback();
+
+  var user = new User(results[0].user);
+  user.fof = _.map(results[0].fofs, function (fof) {
+    return new User(fof);
+  });
   callback(null, user);
 };
 
@@ -335,12 +346,27 @@ var _matchWithFriendsAndFOF = function (params, options, callback) {
     'MATCH (user:User {id:{id}})',
     'OPTIONAL MATCH (user)-[:friend]-(friend:User)',
     'OPTIONAL MATCH (friend:User)-[:friend]-(fof:User)',
-    // 'WHERE NOT(user=fof)',
+    'WHERE NOT(user=fof)',
     'RETURN user, friend, COLLECT(fof) as fofs'
   ].join('\n');
   callback(null, query, cypher_params);
 };
 
+// match with friends of friends (FOF)
+var _matchWithFOF = function (params, options, callback) {
+  var cypher_params = {
+    id: params.id
+  };
+
+  var query = [
+    'MATCH (user:User {id:{id}})',
+    'OPTIONAL MATCH (user)-[:friend]-(friend:User)',
+    'OPTIONAL MATCH (friend:User)-[:friend]-(fof:User)',
+    'WHERE NOT(user=fof)',
+    'RETURN user, COLLECT(DISTINCT fof) as fofs'
+  ].join('\n');
+  callback(null, query, cypher_params);
+};
 
 // match all with friends
 var _matchAllWithFriends = function (params, options, callback) {
@@ -493,6 +519,9 @@ var getWithFriends = Cypher(_matchWithFriends, _singleUserWithFriends);
 // get a single user by id and all friends and friends of friends
 var getWithFriendsAndFOF = Cypher(_matchWithFriendsAndFOF, _singleUserWithFriendsAndFOF);
 
+// get a single user by id and all friends of friends
+var getWithFOF = Cypher(_matchWithFOF, _singleUserWithFOF);
+
 // get all users and all friends
 var getAllWithFriends = Cypher(_matchAllWithFriends, _manyUsersWithFriends);
 
@@ -522,5 +551,6 @@ module.exports = {
   resetUsers: resetUsers,
   getWithFriends: getWithFriends,
   getWithFriendsAndFOF: getWithFriendsAndFOF,
+  getWithFOF: getWithFOF,
   getAllWithFriends: getAllWithFriends
 };

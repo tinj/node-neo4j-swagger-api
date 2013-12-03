@@ -320,6 +320,35 @@ exports.getWithFriendsAndFOF = {
   }
 };
 
+exports.getWithFOF = {
+  'spec': {
+    "description" : "find a user and their friends of friends",
+    "path" : "/users/{id}/fof",
+    "notes" : "Returns a user based on ID with friends of friends",
+    "summary" : "Find user by ID with friends of friends",
+    "method": "GET",
+    "params" : [
+      param.path("id", "ID of user that needs to be fetched", "string"),
+      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+    ],
+    "responseClass" : "User",
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
+    "nickname" : "getByIdWithFOF"
+  },
+  'action': function (req,res) {
+    var id = req.params.id;
+    var options = {
+      raws: parseRaws(req)
+    };
+    var start = new Date();
+    if (!id) throw swe.invalid('id');
+
+    Users.getWithFOF({id: id}, options, function (err, response) {
+      if (err) throw swe.notFound('user');
+      writeResponse(res, response, start);
+    });
+  }
+};
 
 exports.updateUser = {
   'spec': {
