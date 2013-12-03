@@ -376,13 +376,10 @@ exports.resetUsers = {
       raws: parseRaws(req)
     };
     var start = new Date();
-    var n = parseInt(parseUrl(req, 'n')) || 10;
-    Users.deleteAllUsers(null, null, function (err) {
-      if (err) throw swe.invalid('user');
-      Users.createRandom({n:n}, options, function (err, response) {
-        if (err || !response.results) throw swe.invalid('input');
-        writeResponse(res, response, start);
-      });
+    var n = parseInt(parseUrl(req, 'n'), 10) || 10;
+    Users.resetUsers({n: n}, options, function (err, response) {
+      if (err || !response.results) throw swe.invalid('input');
+      writeResponse(res, response, start);
     });
   }
 };

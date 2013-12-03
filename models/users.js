@@ -410,6 +410,16 @@ var deleteUser = Cypher(_delete);
 // delete a user by id
 var deleteAllUsers = Cypher(_deleteAll);
 
+// reset all users
+var resetUsers = function (params, options, callback) {
+  deleteAllUsers(null, options, function (err, response) {
+    if (err) return callback(err, response);
+    createRandom(params, options, function (err, finalResponse) {
+      Cypher.mergeRaws(err, [response, finalResponse], callback);
+    });
+  });
+};
+
 // get a single user by id and all friends
 var getWithFriends = Cypher(_matchWithFriends, _singleUserWithFriends);
 
@@ -438,6 +448,7 @@ module.exports = {
   unfriendUser: unfriendUser,
   deleteUser: deleteUser,
   deleteAllUsers: deleteAllUsers,
+  resetUsers: resetUsers,
   getWithFriends: getWithFriends,
   getAllWithFriends: getAllWithFriends
 };
