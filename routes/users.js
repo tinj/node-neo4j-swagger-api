@@ -388,8 +388,6 @@ exports.resetUsers = {
 };
 
 
-
-
 exports.friendUser = {
   'spec': {
     "path" : "/users/{id}/friend/{friend_id}",
@@ -433,14 +431,14 @@ exports.friendUser = {
 exports.manyRandomFriendships = {
   'spec': {
     "path" : "/users/random/friend/{n}",
-    "notes" : "gets n random friendships",
+    "notes" : "creates n random friendships",
     "method": "POST",
     "summary" : "create many random friendships",
     "params" : [
       param.path("n", "Number of random users", "integer", null, "1"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
-    "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
+    "errorResponses" : [swe.notFound('users')],
     "nickname" : "manyRandomFriendships"
   },
   'action': function(req, res) {
@@ -453,7 +451,7 @@ exports.manyRandomFriendships = {
       n: n
     };
     Users.manyRandomFriendships(params, options, function (err, response) {
-      // if (!response.results) throw swe.invalid('user');
+      if (err) throw swe.notFound('users');
       writeResponse(res, response, start);
     });
   }

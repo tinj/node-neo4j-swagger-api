@@ -380,6 +380,7 @@ var manyFriendships = function (params, options, callback) {
     return user.n > 0;
   });
 
+  // this should be syncronous if we want to ensure no duplicates/deadlocks
   async.map(users, function (user, callback) {
     friendRandomUser(user, options, callback);
   }, function (err, responses) {
@@ -389,15 +390,12 @@ var manyFriendships = function (params, options, callback) {
 
 // creates many friendships between random users
 var manyRandomFriendships = function (params, options, callback) {
-  console.log('start');
   getRandom(params, options, function (err, response) {
     if (err) return callback(err, response);
-    console.log('get');
     manyFriendships({
       users: response.results,
       friendships: params.friendships || params.n
     }, options, function (err, finalResponse) {
-      console.log('final');
       Cypher.mergeRaws(err, [response, finalResponse], callback);
     });
   });
