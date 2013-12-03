@@ -72,6 +72,23 @@ var _singleUserWithFriends = function (results, callback) {
   callback(null, _parseUserWithFriends(results[0]));
 };
 
+// returns a user and their friends
+var _singleUserWithFriendsAndFOF = function (results, callback) {
+  if (!results.length) return callback();
+
+  var user = new User(results[0].user);
+  user.friends = _.chain(results).map(function (result) {
+    if (result.friend) {
+      var friend = new User(result.friend);
+      friend.friends = _.map(result.fofs, function (fof) {
+        return new User(fof);
+      });
+      return friend;
+    }
+  }).compact().value();
+  callback(null, user);
+};
+
 // returns many users and their friends
 var _manyUsersWithFriends = function (results, callback) {
   var users = _.map(results, _parseUserWithFriends);
@@ -308,6 +325,22 @@ var _matchWithFriends = function (params, options, callback) {
   callback(null, query, cypher_params);
 };
 
+// match with friends and friends of friends (FOF)
+var _matchWithFriendsAndFOF = function (params, options, callback) {
+  var cypher_params = {
+    id: params.id
+  };
+
+  var query = [
+    'MATCH (user:User {id:{id}})',
+    'OPTIONAL MATCH (user)-[:friend]-(friend:User)',
+    'OPTIONAL MATCH (friend:User)-[:friend]-(fof:User)',
+    // 'WHERE NOT(user=fof)',
+    'RETURN user, friend, COLLECT(fof) as fofs'
+  ].join('\n');
+  callback(null, query, cypher_params);
+};
+
 
 // match all with friends
 var _matchAllWithFriends = function (params, options, callback) {
@@ -457,6 +490,9 @@ var resetUsers = function (params, options, callback) {
 // get a single user by id and all friends
 var getWithFriends = Cypher(_matchWithFriends, _singleUserWithFriends);
 
+// get a single user by id and all friends and friends of friends
+var getWithFriendsAndFOF = Cypher(_matchWithFriendsAndFOF, _singleUserWithFriendsAndFOF);
+
 // get all users and all friends
 var getAllWithFriends = Cypher(_matchAllWithFriends, _manyUsersWithFriends);
 
@@ -485,5 +521,6 @@ module.exports = {
   deleteAllUsers: deleteAllUsers,
   resetUsers: resetUsers,
   getWithFriends: getWithFriends,
+  getWithFriendsAndFOF: getWithFriendsAndFOF,
   getAllWithFriends: getAllWithFriends
 };

@@ -57,7 +57,7 @@ exports.userCount = {
     "description" : "User count",
     "path" : "/users/count",
     "notes" : "User count",
-    "summary" : "user count",
+    "summary" : "User count",
     "method": "GET",
     "params" : [
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
@@ -283,6 +283,37 @@ exports.findByIdWithFriends = {
     if (!id) throw swe.invalid('id');
 
     Users.getWithFriends({id: id}, options, function (err, response) {
+      if (err) throw swe.notFound('user');
+      writeResponse(res, response, start);
+    });
+  }
+};
+
+
+exports.getWithFriendsAndFOF = {
+  'spec': {
+    "description" : "find a user and their friends and friends of friends",
+    "path" : "/users/{id}/friends/fof",
+    "notes" : "Returns a user based on ID with friends and friends of friends",
+    "summary" : "Find user by ID with friends and friends of friends",
+    "method": "GET",
+    "params" : [
+      param.path("id", "ID of user that needs to be fetched", "string"),
+      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+    ],
+    "responseClass" : "User",
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
+    "nickname" : "getByIdWithFriendsAndFOF"
+  },
+  'action': function (req,res) {
+    var id = req.params.id;
+    var options = {
+      raws: parseRaws(req)
+    };
+    var start = new Date();
+    if (!id) throw swe.invalid('id');
+
+    Users.getWithFriendsAndFOF({id: id}, options, function (err, response) {
       if (err) throw swe.notFound('user');
       writeResponse(res, response, start);
     });
