@@ -7,19 +7,13 @@ var sw = require("swagger-node-express");
 var param = sw.params;
 var url = require("url");
 var swe = sw.errors;
-// var _ = require('underscore');
+var _ = require('underscore');
 
 
-function writeResponse (res, results, q_raws, raws, start) {
+function writeResponse (res, response, start) {
   sw.setHeaders(res);
-  var data = {
-    response: results,
-    durationMS: new Date() - start
-  };
-  if (q_raws) {
-    data.raws = raws;
-  }
-  res.send(JSON.stringify(data));
+  response.durationMS = new Date() - start;
+  res.send(JSON.stringify(response));
 }
 
 function parseUrl(req, key) {
@@ -29,15 +23,6 @@ function parseUrl(req, key) {
 function parseRaws (req) {
   return 'true' == url.parse(req.url,true).query["raws"];
 }
-
-// function writeResponseEnvelope (res, data, raws) {
-//   var envelope = {
-//     response: data,
-//     raws: raws
-//   };
-//   sw.setHeaders(res);
-//   res.send(JSON.stringify(envelope));
-// }
 
 
 exports.list = {
@@ -55,12 +40,14 @@ exports.list = {
     "nickname" : "getUsers"
   },
   'action': function (req, res) {
-    var q_raws = parseRaws(req);
+    var options = {
+      raws: parseRaws(req)
+    };
     var start = new Date();
-    Users.getAll(null, {}, function (err, users, raws) {
-      if (err || !users) throw swe.notFound('users');
+    Users.getAll(null, options, function (err, response) {
+      if (err || !response.results) throw swe.notFound('users');
 
-      writeResponse(res, users, q_raws, raws, start);
+      writeResponse(res, response, start);
     });
   }
 };
@@ -80,11 +67,13 @@ exports.listWithFriends = {
     "nickname" : "getUsersWithFriends"
   },
   'action': function (req,res) {
-    var q_raws = parseRaws(req);
+    var options = {
+      raws: parseRaws(req)
+    };
     var start = new Date();
-    Users.getAllWithFriends(null, {}, function (err, users, raws) {
-      if (err || !users) throw swe.notFound('users');
-      writeResponse(res, users, q_raws, raws, start);
+    Users.getAllWithFriends(null, options, function (err, response) {
+      if (err || !response.results) throw swe.notFound('users');
+      writeResponse(res, response, start);
     });
   }
 };
@@ -96,59 +85,29 @@ exports.addUser = {
     "notes" : "adds a user to the graph",
     "summary" : "Add a new user to the graph",
     "method": "POST",
-    "responseClass" : "User",
+    "responseClass" : "List[User]",
     "params" : [
-      param.query("name", "User name", "string", true, false),
+      param.query("name", "User name, seperate multiple names by commas", "string", true, true),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('input')],
     "nickname" : "addUser"
   },
   'action': function(req, res) {
-    var q_raws = parseRaws(req);
+    var options = {
+      raws: parseRaws(req)
+    };
     var start = new Date();
-    var name = parseUrl(req, 'name').trim();
+    var names = _.invoke(parseUrl(req, 'name').split(','), 'trim');
     // req.body ? req.body.name : null;
-    if (!name){
+    if (!names.length){
       throw swe.invalid('name');
     } else {
-      Users.create({
-        name: name
-      }, {}, function (err, user, raws) {
-        if (err || !user) throw swe.invalid('input');
-        writeResponse(res, user, q_raws, raws, start);
-      });
-    }
-  }
-};
-
-
-exports.addUsers = {
-  'spec': {
-    "path" : "/users/many",
-    "notes" : "adds many users to the graph",
-    "summary" : "Add many new users to the graph",
-    "method": "POST",
-    "responseClass" : "List[User]",
-    "params" : [
-      param.body("body", "User name", "List[newUser]"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
-    ],
-    "errorResponses" : [swe.invalid('input')],
-    "nickname" : "addManyUsers"
-  },
-  'action': function(req, res) {
-    var q_raws = parseRaws(req);
-    var start = new Date();
-    var users = req.body ? req.body.users : null;
-    if (!users){
-      throw swe.invalid('users');
-    } else {
       Users.createMany({
-        users: users
-      }, {}, function (err, users, raws) {
-        if (err || !users) throw swe.invalid('input');
-        writeResponse(res, users, q_raws, raws, start);
+        names: names
+      }, options, function (err, response) {
+        if (err || !response.results) throw swe.invalid('input');
+        writeResponse(res, response, start);
       });
     }
   }
@@ -170,24 +129,22 @@ exports.addRandomUsers = {
     "nickname" : "addRandomUsers"
   },
   'action': function(req, res) {
-    var q_raws = parseRaws(req);
+    var options = {
+      raws: parseRaws(req)
+    };
     var start = new Date();
     var n = parseInt(req.params.n);
     if (!n){
       throw swe.invalid('input');
     } else {
-      Users.createRandom({n:n}, null, function (err, users, raws) {
-        if (err || !users) throw swe.invalid('input');
-        writeResponse(res, users, q_raws, raws, start);
+      Users.createRandom({n:n}, options, function (err, response) {
+        if (err || !response.results) throw swe.invalid('input');
+        writeResponse(res, response, start);
       });
     }
   }
 };
 
-
-/**
- * GET /users/:id
- */
 
 exports.findById = {
   'spec': {
@@ -206,13 +163,15 @@ exports.findById = {
   },
   'action': function (req,res) {
     var id = req.params.id;
-    var q_raws = parseRaws(req);
+    var options = {
+      raws: parseRaws(req)
+    };
     var start = new Date();
     if (!id) throw swe.invalid('id');
 
-    Users.getById({id: id}, {}, function (err, user, raws) {
+    Users.getById({id: id}, options, function (err, response) {
       if (err) throw swe.notFound('user');
-      writeResponse(res, user, q_raws, raws, start);
+      writeResponse(res, response, start);
     });
   }
 };
@@ -234,21 +193,19 @@ exports.findByIdWithFriends = {
   },
   'action': function (req,res) {
     var id = req.params.id;
-    var q_raws = parseRaws(req);
+    var options = {
+      raws: parseRaws(req)
+    };
     var start = new Date();
     if (!id) throw swe.invalid('id');
 
-    Users.getWithFriends({id: id}, {}, function (err, user, raws) {
+    Users.getWithFriends({id: id}, options, function (err, response) {
       if (err) throw swe.notFound('user');
-      writeResponse(res, user, q_raws, raws, start);
+      writeResponse(res, response, start);
     });
   }
 };
 
-
-/**
- * POST /users/:id
- */
 
 exports.updateUser = {
   'spec': {
@@ -258,28 +215,31 @@ exports.updateUser = {
     "summary" : "Update an existing user",
     "params" : [
       param.path("id", "ID of user that needs to be fetched", "string"),
-      param.body("body", "User object that needs to be updated", "User"),
+      param.query("name", "New user name", "string", true),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "updateUser"
   },
   'action': function(req, res) {
-    var q_raws = parseRaws(req);
+    console.log('updateUser');
+    var options = {
+      raws: parseRaws(req)
+    };
     var start = new Date();
-    var body = req.body;
+    var name = parseUrl(req, 'name').trim();
     var id = req.params.id;
-    if (!body || !id || !body.name){
+    if (!id || !name.length){
       throw swe.invalid('user');
     }
     var params = {
       id: id,
-      name: body.name
+      name: name
     };
-    Users.updateName(params, {}, function (err, user, raws) {
+    Users.updateName(params, options, function (err, response) {
       if (err) throw swe.invalid('id');
-      if (!user) throw swe.invalid('user');
-      writeResponse(res, user, q_raws, raws, start);
+      if (!response.results) throw swe.invalid('user');
+      writeResponse(res, response, start);
     });
   }
 };
@@ -303,11 +263,10 @@ exports.deleteUser = {
   },
   'action': function(req, res) {
     var id = req.params.id;
-    // var q_raws = parseRaws(req);
     // var start = new Date();
     if (!id) throw swe.invalid('id');
 
-    Users.deleteUser({id: id}, {}, function (err) {
+    Users.deleteUser({id: id}, null, function (err) {
       if (err) throw swe.invalid('user');
       res.send(200);
     });
@@ -333,7 +292,6 @@ exports.deleteAllUsers = {
     "nickname" : "deleteAllUsers"
   },
   'action': function(req, res) {
-    // var q_raws = parseRaws(req);
     // var start = new Date();
     Users.deleteAllUsers(null, null, function (err) {
       if (err) throw swe.invalid('user');
@@ -344,11 +302,11 @@ exports.deleteAllUsers = {
 
 exports.resetUsers = {
   'spec': {
-    "path" : "/users/reset",
+    "path" : "/users",
     "notes" : "removes all users from the db and adds n random users",
-    "method": "POST",
+    "method": "PUT",
     "summary" : "Removes all users and then adds n random users",
-    "errorResponses" : [swe.invalid('user')],
+    "errorResponses" : [swe.invalid('user'), swe.invalid('input')],
     "responseClass" : "List[User]",
     "params" : [
       param.query("n", "Number of random users to be created", "integer", null, null, null, 10),
@@ -357,14 +315,17 @@ exports.resetUsers = {
     "nickname" : "resetUsers"
   },
   'action': function(req, res) {
-    var q_raws = parseRaws(req);
+    console.log('resetUsers');
+    var options = {
+      raws: parseRaws(req)
+    };
     var start = new Date();
-    var n = parseInt(url.parse(req.url,true).query["n"]) || 10;
+    var n = parseInt(parseUrl(req, 'n')) || 10;
     Users.deleteAllUsers(null, null, function (err) {
       if (err) throw swe.invalid('user');
-      Users.createRandom({n:n}, null, function (err, users, raws) {
-        if (err || !users) throw swe.invalid('input');
-        writeResponse(res, users, q_raws, raws, start);
+      Users.createRandom({n:n}, options, function (err, response) {
+        if (err || !response.results) throw swe.invalid('input');
+        writeResponse(res, response, start);
       });
     });
   }
@@ -388,7 +349,9 @@ exports.friendUser = {
     "nickname" : "friendUser"
   },
   'action': function(req, res) {
-    var q_raws = parseRaws(req);
+    var options = {
+      raws: parseRaws(req)
+    };
     var start = new Date();
     var id = req.params.id;
     var friend_id = req.params.friend_id;
@@ -402,10 +365,10 @@ exports.friendUser = {
       id: id,
       friend_id: friend_id
     };
-    Users.friendUser(params, {}, function (err, results, raws) {
+    Users.friendUser(params, options, function (err, response) {
       if (err) throw swe.invalid('id');
-      if (!results) throw swe.invalid('user');
-      writeResponse(res, results, q_raws, raws, start);
+      if (!response.results) throw swe.invalid('user');
+      writeResponse(res, response, start);
     });
   }
 };
@@ -426,7 +389,9 @@ exports.friendRandomUser = {
     "nickname" : "friendUser"
   },
   'action': function(req, res) {
-    var q_raws = parseRaws(req);
+    var options = {
+      raws: parseRaws(req)
+    };
     var start = new Date();
     var id = req.params.id;
     var n = parseInt(req.params.n) || 1;
@@ -437,10 +402,10 @@ exports.friendRandomUser = {
       id: id,
       n: n
     };
-    Users.friendRandomUser(params, {}, function (err, results, raws) {
+    Users.friendRandomUser(params, options, function (err, response) {
       if (err) throw swe.invalid('id');
-      if (!results) throw swe.invalid('user');
-      writeResponse(res, results, q_raws, raws, start);
+      if (!response.results) throw swe.invalid('user');
+      writeResponse(res, response, start);
     });
   }
 };
@@ -460,7 +425,9 @@ exports.unfriendUser = {
     "nickname" : "unfriendUser"
   },
   'action': function(req, res) {
-    var q_raws = parseRaws(req);
+    var options = {
+      raws: parseRaws(req)
+    };
     var start = new Date();
     var id = req.params.id;
     var friend_id = req.params.friend_id;
@@ -474,10 +441,10 @@ exports.unfriendUser = {
       id: id,
       friend_id: friend_id
     };
-    Users.unfriendUser(params, {}, function (err, results, raws) {
+    Users.unfriendUser(params, options, function (err, response) {
       if (err) throw swe.invalid('id');
-      if (!results) throw swe.invalid('user');
-      writeResponse(res, results, q_raws, raws, start);
+      if (!response.results) throw swe.invalid('user');
+      writeResponse(res, response, start);
     });
   }
 };

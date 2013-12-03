@@ -89,7 +89,6 @@ swagger.addModels(models)
   .addGet(routes.users.findById)
   .addGet(routes.users.findByIdWithFriends)
   .addPost(routes.users.addUser)
-  .addPost(routes.users.addUsers)
   .addPost(routes.users.addRandomUsers)
   .addPost(routes.users.friendRandomUser)
   .addPost(routes.users.friendUser)
@@ -97,7 +96,7 @@ swagger.addModels(models)
   .addPut(routes.users.updateUser)
   .addDelete(routes.users.deleteUser)
   .addDelete(routes.users.deleteAllUsers)
-  .addPost(routes.users.resetUsers)
+  .addPut(routes.users.resetUsers)
 
   // .addGet(routes.pets.findByTags)
   // .addGet(routes.pets.findByStatus)
@@ -110,7 +109,7 @@ swagger.addModels(models)
 
 // Configures the app's base path and api version.
 console.log(BASE_URL+API_STRING);
-swagger.configure(BASE_URL+API_STRING, "0.0.6");
+swagger.configure(BASE_URL+API_STRING, "0.0.7");
 
 
 // Routes

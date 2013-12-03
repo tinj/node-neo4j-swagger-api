@@ -285,12 +285,16 @@ var create = Cypher(_create, _singleUser);
 var createMany = function (params, options, callback) {
   if (params.names && _.isArray(params.names)) {
     async.map(params.names, function (name, callback) {
-      create({name: name}, null, callback);
-    }, callback);
+      create({name: name}, options, callback);
+    }, function (err, responses) {
+      Cypher.mergeReponses(err, responses, callback);
+    });
   } else if (params.users && _.isArray(params.users)) {
     async.map(params.users, function (user, callback) {
-      create(_.pick(user, 'name', 'id'), null, callback);
-    }, callback);
+      create(_.pick(user, 'name', 'id'), options, callback);
+    }, function (err, responses) {
+      Cypher.mergeReponses(err, responses, callback);
+    });
   } else {
     callback(null, []);
   }

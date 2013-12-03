@@ -6,46 +6,51 @@ var neo4j = require('neo4j'),
     _ = require('underscore')
 ;
 
-function cleanResults (results) {
+function formatResponse (options, finalResults, query, cypher_params, results, err) {
+  if (err) console.log(err);
 
+  // if options.raws == true, add neo4j query, params, results, and err to response
+  if (options && options.raws) {
+    return {
+      results: finalResults,
+      raws: {
+        query: query,
+        params: cypher_params,
+        results: _cleanResults(results),
+        err: err
+      }
+    };
+  } else {
+    return {
+      results: finalResults
+    };
+  }
 }
 
-// Cypher
-// for creating cypher queries and processing the results
-// queryFn is takes in params and options and returns a callback with the cypher query
-// resultsFn takes the results from a cypher query and does something and then callback
+/* Cypher
+ * returns a combined function for creating cypher queries and processing the results
+ *
+ * queryFn : takes in params and options and returns a callback with the cypher query
+ *
+ * resultsFn : takes the results from a cypher query and does something and then callback
+ *
+ * db.query : executes a cypher query to neo4j
+ *
+ * formatResponse : structures the results based on options param
+ */
+
 var Cypher = function (queryFn, resultsFn) {
   return function (params, options, callback) {
     queryFn(params, options, function (err, query, cypher_params) {
       if (err) {
-        return callback(err, null, {
-          query: query,
-          params: cypher_params,
-          err: err
-        });
+        return callback(err, formatResponse(options, null, query, cypher_params, null, err));
       }
       db.query(query, cypher_params, function (err, results) {
-        if (err) {
-          console.log(err);
-          callback(err, null, {
-            query: query,
-            params: cypher_params,
-            results: _cleanResults(results),
-            err: err
-          });
-        } else if (!_.isFunction(resultsFn)) {
-          callback(err, null, {
-            query: query,
-            params: cypher_params,
-            results: _cleanResults(results)
-          });
+        if (err || !_.isFunction(resultsFn)) {
+          return callback(err, formatResponse(options, null, query, cypher_params, results, err));
         } else {
           resultsFn(results, function (err, finalResults) {
-            callback(err, finalResults, {
-              query: query,
-              params: cypher_params,
-              results: _cleanResults(results)
-            });
+            return callback(err, formatResponse(options, finalResults, query, cypher_params, results, err));
           });
         }
       });
@@ -53,6 +58,22 @@ var Cypher = function (queryFn, resultsFn) {
   };
 };
 
+// merges an array of responses and
+Cypher.mergeReponses = function (err, responses, callback) {
+  var response = {};
+  if (responses.length) {
+    response.results = _.pluck(responses, 'results');
+    if (responses[0].raws) {
+      response.raws = _.pluck(responses, 'raws');
+    }
+  }
+  callback(err, response);
+};
+
+/*
+ *  Neo4j results cleaning functions
+ *  strips RESTful data from cypher results
+ */
 
 // creates a clean results which removes all non _data properties from nodes/rels
 function _cleanResults (results, stringify) {
