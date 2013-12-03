@@ -148,7 +148,7 @@ exports.addRandomUsers = {
 
 exports.findById = {
   'spec': {
-    "description" : "Operations about users",
+    "description" : "find a user",
     "path" : "/users/{id}",
     "notes" : "Returns a user based on ID",
     "summary" : "Find user by ID",
@@ -158,16 +158,14 @@ exports.findById = {
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "User",
-    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
+    "errorResponses" : [swe.notFound('user')],
     "nickname" : "getUserById"
   },
   'action': function (req,res) {
-    var id = req.params.id;
     var options = {
       raws: parseRaws(req)
     };
     var start = new Date();
-    if (!id) throw swe.invalid('id');
 
     Users.getById({id: id}, options, function (err, response) {
       if (err) throw swe.notFound('user');
@@ -176,12 +174,70 @@ exports.findById = {
   }
 };
 
+exports.getRandom = {
+  'spec': {
+    "description" : "get random users",
+    "path" : "/users/random/{n}",
+    "notes" : "Returns n random users",
+    "summary" : "get random users",
+    "method": "GET",
+    "params" : [
+      param.path("n", "Number of random users get", "integer", null, 1),
+      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+    ],
+    "responseClass" : "User",
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
+    "nickname" : "getRandomUsers"
+  },
+  'action': function (req,res) {
+    var n = req.params.n;
+    var options = {
+      raws: parseRaws(req)
+    };
+    var start = new Date();
+
+    Users.getRandom({n: n}, options, function (err, response) {
+      if (err) throw swe.notFound('users');
+      writeResponse(res, response, start);
+    });
+  }
+};
+
+exports.getRandomWithFriends = {
+  'spec': {
+    "description" : "get random users with friends",
+    "path" : "/users/random/{n}/friends",
+    "notes" : "Returns n random users with friends",
+    "summary" : "get random users with friends",
+    "method": "GET",
+    "params" : [
+      param.path("n", "Number of random users get", "integer", null, 1),
+      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+    ],
+    "responseClass" : "User",
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
+    "nickname" : "getRandomUsers"
+  },
+  'action': function (req,res) {
+    var n = req.params.n;
+    var options = {
+      raws: parseRaws(req)
+    };
+    var start = new Date();
+
+    Users.getRandomWithFriends({n: n}, options, function (err, response) {
+      if (err) throw swe.notFound('users');
+      writeResponse(res, response, start);
+    });
+  }
+};
+
 exports.findByIdWithFriends = {
   'spec': {
-    "description" : "Operations about users",
+    "description" : "find a user and their friends",
     "path" : "/users/{id}/friends",
-    "notes" : "Returns a user based on ID",
-    "summary" : "Find user by ID",
+    "notes" : "Returns a user based on ID with friends",
+    "summary" : "Find user by ID with friends",
     "method": "GET",
     "params" : [
       param.path("id", "ID of user that needs to be fetched", "string"),
@@ -374,6 +430,35 @@ exports.friendUser = {
 };
 
 
+exports.manyRandomFriendships = {
+  'spec': {
+    "path" : "/users/random/friend/{n}",
+    "notes" : "gets n random friendships",
+    "method": "POST",
+    "summary" : "create many random friendships",
+    "params" : [
+      param.path("n", "Number of random users", "integer", null, "1"),
+      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+    ],
+    "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
+    "nickname" : "manyRandomFriendships"
+  },
+  'action': function(req, res) {
+    var options = {
+      raws: parseRaws(req)
+    };
+    var start = new Date();
+    var n = parseInt(req.params.n, 10) || 1;
+    var params = {
+      n: n
+    };
+    Users.manyRandomFriendships(params, options, function (err, response) {
+      // if (!response.results) throw swe.invalid('user');
+      writeResponse(res, response, start);
+    });
+  }
+};
+
 exports.friendRandomUser = {
   'spec': {
     "path" : "/users/{id}/friend/random/{n}",
@@ -386,7 +471,7 @@ exports.friendRandomUser = {
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
-    "nickname" : "friendUser"
+    "nickname" : "friendRandomUser"
   },
   'action': function(req, res) {
     var options = {

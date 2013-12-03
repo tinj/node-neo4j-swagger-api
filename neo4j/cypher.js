@@ -58,11 +58,23 @@ var Cypher = function (queryFn, resultsFn) {
   };
 };
 
-// merges an array of responses and
+// merges an array of responses
 Cypher.mergeReponses = function (err, responses, callback) {
   var response = {};
   if (responses.length) {
     response.results = _.pluck(responses, 'results');
+    if (responses[0].raws) {
+      response.raws = _.pluck(responses, 'raws');
+    }
+  }
+  callback(err, response);
+};
+
+// merges only raws in an array of responses
+Cypher.mergeRaws = function (err, responses, callback) {
+  var response = {};
+  if (responses.length) {
+    response.results = _.last(responses).results;
     if (responses[0].raws) {
       response.raws = _.pluck(responses, 'raws');
     }
