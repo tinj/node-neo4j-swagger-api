@@ -345,7 +345,7 @@ exports.friendUser = {
       param.path("friend_id", "ID of the user to be friended", "string"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
-    "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
+    "errorResponses" : [swe.invalid('id'), swe.invalid('friend_id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "friendUser"
   },
   'action': function(req, res) {
@@ -355,10 +355,10 @@ exports.friendUser = {
     var start = new Date();
     var id = req.params.id;
     var friend_id = req.params.friend_id;
-    if (!id || !friend_id){
+    if (!id) {
       throw swe.invalid('user');
     }
-    if (friend_id == id) {
+    if (!friend_id || friend_id == id) {
       throw swe.invalid('friend_id');
     }
     var params = {
@@ -421,7 +421,7 @@ exports.unfriendUser = {
       param.path("friend_id", "ID of the user to be unfriended", "string"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
-    "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
+    "errorResponses" : [swe.invalid('id'), swe.invalid('friend_id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "unfriendUser"
   },
   'action': function(req, res) {
@@ -431,10 +431,10 @@ exports.unfriendUser = {
     var start = new Date();
     var id = req.params.id;
     var friend_id = req.params.friend_id;
-    if (!id || !friend_id){
+    if (!id) {
       throw swe.invalid('user');
     }
-    if (friend_id == id) {
+    if (!friend_id || friend_id == id) {
       throw swe.invalid('friend_id');
     }
     var params = {
