@@ -40,7 +40,7 @@ TODO
 
 I'm using Trello for my todo list, feel free to comment!
 
-https://trello.com/b/kelJzC12/node-neo4j-swagger-api
+https://trello.com/b/kelJzC12/neo4j-swagger
 
 1. Move neo4j queries and results to swagger client
 2. Add graph visualization to swagger

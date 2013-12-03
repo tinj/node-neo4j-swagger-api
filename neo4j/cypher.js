@@ -9,11 +9,11 @@ var neo4j = require('neo4j'),
 function formatResponse (options, finalResults, query, cypher_params, results, err) {
   if (err) console.log(err);
 
-  // if options.raws == true, add neo4j query, params, results, and err to response
-  if (options && options.raws) {
+  // if options.neo4j == true, add cypher query, params, results, and err to response
+  if (options && options.neo4j) {
     return {
       results: finalResults,
-      raws: {
+      neo4j: {
         query: query,
         params: cypher_params,
         results: _cleanResults(results),
@@ -63,20 +63,20 @@ Cypher.mergeReponses = function (err, responses, callback) {
   var response = {};
   if (responses.length) {
     response.results = _.pluck(responses, 'results');
-    if (responses[0] && responses[0].raws) {
-      response.raws = _.pluck(responses, 'raws');
+    if (responses[0] && responses[0].neo4j) {
+      response.neo4j = _.pluck(responses, 'neo4j');
     }
   }
   callback(err, response);
 };
 
-// merges only raws in an array of responses
+// merges only neo4j in an array of responses
 Cypher.mergeRaws = function (err, responses, callback) {
   var response = {};
   if (responses.length) {
     response.results = _.last(responses).results;
-    if (responses[0].raws) {
-      response.raws = _.pluck(responses, 'raws');
+    if (responses[0].neo4j) {
+      response.neo4j = _.pluck(responses, 'neo4j');
     }
   }
   callback(err, response);

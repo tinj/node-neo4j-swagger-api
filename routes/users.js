@@ -16,6 +16,9 @@ var _ = require('underscore');
 
 function writeResponse (res, response, start) {
   sw.setHeaders(res);
+  // move neo4j from response to headers?
+
+  // move duration from response to headers?
   response.durationMS = new Date() - start;
   res.send(JSON.stringify(response));
 }
@@ -42,7 +45,7 @@ exports.list = {
     "method": "GET",
     "params" : [
       param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "List[User]",
     "errorResponses" : [swe.notFound('users')],
@@ -51,7 +54,7 @@ exports.list = {
   'action': function (req, res) {
     var friends = parseBool(req, 'friends');
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
 
@@ -77,7 +80,7 @@ exports.userCount = {
     "summary" : "User count",
     "method": "GET",
     "params" : [
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "Count",
     "errorResponses" : [swe.notFound('users')],
@@ -85,7 +88,7 @@ exports.userCount = {
   },
   'action': function (req, res) {
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
     Users.getAllCount(null, options, function (err, response) {
@@ -104,14 +107,14 @@ exports.addUser = {
     "responseClass" : "List[User]",
     "params" : [
       param.query("name", "User name, seperate multiple names by commas", "string", true, true),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('input')],
     "nickname" : "addUser"
   },
   'action': function(req, res) {
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
     var names = _.invoke(parseUrl(req, 'name').split(','), 'trim');
@@ -138,14 +141,14 @@ exports.addRandomUsers = {
     "responseClass" : "List[User]",
     "params" : [
       param.path("n", "Number of random users to be created", "integer", null, 1),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('input')],
     "nickname" : "addRandomUsers"
   },
   'action': function(req, res) {
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
     var n = parseInt(req.params.n, 10);
@@ -171,8 +174,8 @@ exports.findById = {
     "params" : [
       param.path("id", "ID of user that needs to be fetched", "string"),
       param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true"),
-      param.query("fof", "Include friends of friends", "boolean", false, false, "LIST[true, false]", "false"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("fof", "Include friends of friends", "boolean", false, false, "LIST[true, false]"),
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "User",
     "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
@@ -181,11 +184,11 @@ exports.findById = {
   'action': function (req,res) {
     var id = req.params.id;
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
     var friends = parseBool(req, 'friends');
-    var fof = 'true' == parseUrl(req, 'fof');
+    var fof = parseBool(req, 'fof');
 
     if (!id) throw swe.invalid('id');
 
@@ -222,16 +225,16 @@ exports.getRandom = {
     "params" : [
       param.path("n", "Number of random users get", "integer", null, 1),
       param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "User",
     "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
     "nickname" : "getRandomUsers"
   },
   'action': function (req,res) {
-    var n = req.params.n;
+    var n = parseInt(req.params.n, 10);
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
     var friends = parseBool(req, 'friends');
@@ -260,14 +263,14 @@ exports.updateUser = {
     "params" : [
       param.path("id", "ID of user that needs to be fetched", "string"),
       param.query("name", "New user name", "string", true),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "updateUser"
   },
   'action': function(req, res) {
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
     var name = parseUrl(req, 'name').trim();
@@ -287,9 +290,6 @@ exports.updateUser = {
   }
 };
 
-/**
- * DELETE /user/:id
- */
 
 exports.deleteUser = {
   'spec': {
@@ -299,7 +299,7 @@ exports.deleteUser = {
     "summary" : "Remove an existing user",
     "params" : [
       param.path("id", "ID of user that needs to be removed", "string"),
-      // param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      // param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
     "nickname" : "deleteUser"
@@ -325,7 +325,7 @@ exports.deleteAllUsers = {
     "summary" : "Removes all users",
     "errorResponses" : [swe.invalid('user')],
     "params" : [
-      // param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      // param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     // "responseClass": 'code', // does this work?
     "nickname" : "deleteAllUsers"
@@ -350,13 +350,13 @@ exports.resetUsers = {
     "params" : [
       param.query("n", "Number of random users to be created", "integer", null, null, null, 10),
       param.query("f", "Average number of friendships per user", "integer", false, null, "LIST[0,1,2,3]", "2"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "nickname" : "resetUsers"
   },
   'action': function(req, res) {
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
     var n = parseInt(parseUrl(req, 'n'), 10) || 10;
@@ -379,14 +379,14 @@ exports.friendUser = {
     "params" : [
       param.path("id", "ID of the user", "string"),
       param.path("friend_id", "ID of the user to be friended", "string"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('id'), swe.invalid('friend_id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "friendUser"
   },
   'action': function(req, res) {
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
     var id = req.params.id;
@@ -418,14 +418,14 @@ exports.manyRandomFriendships = {
     "summary" : "create many random friendships",
     "params" : [
       param.path("n", "Number of random users", "integer", null, "1"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.notFound('users')],
     "nickname" : "manyRandomFriendships"
   },
   'action': function(req, res) {
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
     var n = parseInt(req.params.n, 10) || 1;
@@ -448,14 +448,14 @@ exports.friendRandomUser = {
     "params" : [
       param.path("id", "ID of the user", "string"),
       param.path("n", "Number of new friends", "integer", "LIST[1,2,3,4,5]", "1"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "friendRandomUser"
   },
   'action': function(req, res) {
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
     var id = req.params.id;
@@ -484,14 +484,14 @@ exports.unfriendUser = {
     "params" : [
       param.path("id", "ID of the user", "string"),
       param.path("friend_id", "ID of the user to be unfriended", "string"),
-      param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "errorResponses" : [swe.invalid('id'), swe.invalid('friend_id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "unfriendUser"
   },
   'action': function(req, res) {
     var options = {
-      raws: parseBool(req, 'raws')
+      neo4j: parseBool(req, 'neo4j')
     };
     var start = new Date();
     var id = req.params.id;
