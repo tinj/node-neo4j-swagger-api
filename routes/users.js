@@ -366,18 +366,20 @@ exports.resetUsers = {
     "responseClass" : "List[User]",
     "params" : [
       param.query("n", "Number of random users to be created", "integer", null, null, null, 10),
+      param.query("f", "Average number of friendships per user", "integer", false, null, "LIST[0,1,2,3]", "2"),
       param.query("raws", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
     ],
     "nickname" : "resetUsers"
   },
   'action': function(req, res) {
-    console.log('resetUsers');
     var options = {
       raws: parseRaws(req)
     };
     var start = new Date();
     var n = parseInt(parseUrl(req, 'n'), 10) || 10;
-    Users.resetUsers({n: n}, options, function (err, response) {
+    var f = parseInt(parseUrl(req, 'f'), 10) || 2;
+    var friendships = Math.round(f*n/2);
+    Users.resetUsers({n: n, friendships: friendships}, options, function (err, response) {
       if (err || !response.results) throw swe.invalid('input');
       writeResponse(res, response, start);
     });

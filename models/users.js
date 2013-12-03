@@ -229,7 +229,7 @@ var _friend = function (params, options, callback) {
 
   var query = [
     'MATCH (user:User {id:{id}}), (friend:User {id:{friend_id}})',
-    'WHERE NOT((user)-[:friend]-(friend))',
+    'WHERE NOT((user)-[:friend]-(friend)) AND NOT(user = friend)',
     'CREATE (user)-[:friend {created: timestamp()}]->(friend)',
     'RETURN user, friend'
   ].join('\n');
@@ -245,7 +245,7 @@ var _friendRandom = function (params, options, callback) {
 
   var query = [
     'MATCH (user:User {id:{id}}), (friend:User)',
-    'WHERE NOT((user)-[:friend]-(friend))',
+    'WHERE NOT((user)-[:friend]-(friend)) AND NOT(user = friend)',
     'WITH user, friend, rand() as rnd',
     'ORDER BY rnd',
     'LIMIT {n}',
@@ -371,7 +371,7 @@ var manyFriendships = function (params, options, callback) {
   var length = users.length;
 
   // randomly distribute friendships between users
-  while (friendships>0) {
+  while (length && friendships>0) {
     friendships--;
     users[Math.floor(Math.random()*length)].n++;
   }
@@ -414,8 +414,15 @@ var deleteAllUsers = Cypher(_deleteAll);
 var resetUsers = function (params, options, callback) {
   deleteAllUsers(null, options, function (err, response) {
     if (err) return callback(err, response);
-    createRandom(params, options, function (err, finalResponse) {
-      Cypher.mergeRaws(err, [response, finalResponse], callback);
+    createRandom(params, options, function (err, secondResponse) {
+      if (err) return Cypher.mergeRaws(err, [response, secondResponse], callback);
+      manyFriendships({
+        users: secondResponse.results,
+        friendships: params.friendships
+      }, options, function (err, finalResponse) {
+        // this doesn't return all the users, just the ones with friends
+        Cypher.mergeRaws(err, [response, secondResponse, finalResponse], callback);
+      });
     });
   });
 };

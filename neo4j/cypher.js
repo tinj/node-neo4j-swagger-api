@@ -63,7 +63,7 @@ Cypher.mergeReponses = function (err, responses, callback) {
   var response = {};
   if (responses.length) {
     response.results = _.pluck(responses, 'results');
-    if (responses[0].raws) {
+    if (responses[0] && responses[0].raws) {
       response.raws = _.pluck(responses, 'raws');
     }
   }
