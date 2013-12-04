@@ -116,7 +116,7 @@ swagger.configure(BASE_URL+API_STRING, "0.0.8");
 // Routes
 
 // Serve up swagger ui at /docs via static route
-var docs_handler = express.static(__dirname + '/views/docs/');
+var docs_handler = express.static(__dirname + '/node_modules/neo4j-swagger-ui/dist/');
 app.get(/^\/docs(\/.*)?$/, function(req, res, next) {
   if (req.url === '/docs') { // express static barfs on root url w/o trailing slash
     res.writeHead(302, { 'Location' : req.url + '/' });
