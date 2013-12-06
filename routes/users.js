@@ -19,8 +19,14 @@ function writeResponse (res, response, start) {
   // move neo4j from response to headers?
 
   // move duration from response to headers?
-  response.durationMS = new Date() - start;
-  res.send(JSON.stringify(response));
+  // response.durationMS = new Date() - start;
+  res.header('Duration-ms', new Date() - start);
+  if (response.neo4j) {
+    res.header('neo4j-query', JSON.stringify(response.neo4j.query));
+    res.header('neo4j-params', JSON.stringify(response.neo4j.params));
+    res.header('neo4j-results', JSON.stringify(response.neo4j.results));
+  }
+  res.send(JSON.stringify(response.results));
 }
 
 function parseUrl(req, key) {
@@ -44,8 +50,7 @@ exports.list = {
     "summary" : "Find all users",
     "method": "GET",
     "params" : [
-      param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true"),
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true")
     ],
     "responseClass" : "List[User]",
     "errorResponses" : [swe.notFound('users')],
@@ -79,9 +84,7 @@ exports.userCount = {
     "notes" : "User count",
     "summary" : "User count",
     "method": "GET",
-    "params" : [
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
-    ],
+    "params" : [],
     "responseClass" : "Count",
     "errorResponses" : [swe.notFound('users')],
     "nickname" : "userCount"
@@ -106,8 +109,7 @@ exports.addUser = {
     "method": "POST",
     "responseClass" : "List[User]",
     "params" : [
-      param.query("name", "User name, seperate multiple names by commas", "string", true, true),
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("name", "User name, seperate multiple names by commas", "string", true, true)
     ],
     "errorResponses" : [swe.invalid('input')],
     "nickname" : "addUser"
@@ -140,8 +142,7 @@ exports.addRandomUsers = {
     "method": "POST",
     "responseClass" : "List[User]",
     "params" : [
-      param.path("n", "Number of random users to be created", "integer", null, 1),
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.path("n", "Number of random users to be created", "integer", null, 1)
     ],
     "errorResponses" : [swe.invalid('input')],
     "nickname" : "addRandomUsers"
@@ -174,8 +175,7 @@ exports.findById = {
     "params" : [
       param.path("id", "ID of user that needs to be fetched", "string"),
       param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true"),
-      param.query("fof", "Include friends of friends", "boolean", false, false, "LIST[true, false]"),
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("fof", "Include friends of friends", "boolean", false, false, "LIST[true, false]")
     ],
     "responseClass" : "User",
     "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
@@ -224,8 +224,7 @@ exports.getRandom = {
     "method": "GET",
     "params" : [
       param.path("n", "Number of random users get", "integer", null, 1),
-      param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true"),
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true")
     ],
     "responseClass" : "User",
     "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
@@ -262,8 +261,7 @@ exports.updateUser = {
     "summary" : "Update an existing user",
     "params" : [
       param.path("id", "ID of user that needs to be fetched", "string"),
-      param.query("name", "New user name", "string", true),
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("name", "New user name", "string", true)
     ],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "updateUser"
@@ -298,8 +296,7 @@ exports.deleteUser = {
     "method": "DELETE",
     "summary" : "Remove an existing user",
     "params" : [
-      param.path("id", "ID of user that needs to be removed", "string"),
-      // param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.path("id", "ID of user that needs to be removed", "string")
     ],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user')],
     "nickname" : "deleteUser"
@@ -324,9 +321,7 @@ exports.deleteAllUsers = {
     "method": "DELETE",
     "summary" : "Removes all users",
     "errorResponses" : [swe.invalid('user')],
-    "params" : [
-      // param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
-    ],
+    "params" : [],
     // "responseClass": 'code', // does this work?
     "nickname" : "deleteAllUsers"
   },
@@ -349,8 +344,7 @@ exports.resetUsers = {
     "responseClass" : "List[User]",
     "params" : [
       param.query("n", "Number of random users to be created", "integer", null, null, null, 10),
-      param.query("f", "Average number of friendships per user", "integer", false, null, "LIST[0,1,2,3]", "2"),
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.query("f", "Average number of friendships per user", "integer", false, null, "LIST[0,1,2,3]", "2")
     ],
     "nickname" : "resetUsers"
   },
@@ -378,8 +372,7 @@ exports.friendUser = {
     "summary" : "Friend an existing user",
     "params" : [
       param.path("id", "ID of the user", "string"),
-      param.path("friend_id", "ID of the user to be friended", "string"),
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.path("friend_id", "ID of the user to be friended", "string")
     ],
     "errorResponses" : [swe.invalid('id'), swe.invalid('friend_id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "friendUser"
@@ -417,8 +410,7 @@ exports.manyRandomFriendships = {
     "method": "POST",
     "summary" : "create many random friendships",
     "params" : [
-      param.path("n", "Number of random users", "integer", null, "1"),
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.path("n", "Number of random users", "integer", null, "1")
     ],
     "errorResponses" : [swe.notFound('users')],
     "nickname" : "manyRandomFriendships"
@@ -447,8 +439,7 @@ exports.friendRandomUser = {
     "summary" : "Friend an existing user",
     "params" : [
       param.path("id", "ID of the user", "string"),
-      param.path("n", "Number of new friends", "integer", "LIST[1,2,3,4,5]", "1"),
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.path("n", "Number of new friends", "integer", "LIST[1,2,3,4,5]", "1")
     ],
     "errorResponses" : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "friendRandomUser"
@@ -483,8 +474,7 @@ exports.unfriendUser = {
     "summary" : "Unfriend an existing user",
     "params" : [
       param.path("id", "ID of the user", "string"),
-      param.path("friend_id", "ID of the user to be unfriended", "string"),
-      param.query("neo4j", "Include neo4j query/results", "boolean", false, false, "LIST[true, false]")
+      param.path("friend_id", "ID of the user to be unfriended", "string")
     ],
     "errorResponses" : [swe.invalid('id'), swe.invalid('friend_id'), swe.notFound('user'), swe.invalid('input')],
     "nickname" : "unfriendUser"
