@@ -16,15 +16,9 @@ var _ = require('underscore');
 
 function writeResponse (res, response, start) {
   sw.setHeaders(res);
-  // move neo4j from response to headers?
-
-  // move duration from response to headers?
-  // response.durationMS = new Date() - start;
   res.header('Duration-ms', new Date() - start);
   if (response.neo4j) {
-    res.header('neo4j-query', JSON.stringify(response.neo4j.query));
-    res.header('neo4j-params', JSON.stringify(response.neo4j.params));
-    res.header('neo4j-results', JSON.stringify(response.neo4j.results));
+    res.header('Neo4j', JSON.stringify(response.neo4j));
   }
   res.send(JSON.stringify(response.results));
 }
