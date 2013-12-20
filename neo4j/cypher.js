@@ -13,18 +13,22 @@ function formatResponse (options, finalResults, query, cypher_params, results, e
   if (options && options.neo4j) {
     return {
       results: finalResults,
-      neo4j: {
-        query: query,
-        params: cypher_params,
-        results: _cleanResults(results),
-        err: err
-      }
+      neo4j: neo4jObj(query, cypher_params, results, err)
     };
   } else {
     return {
       results: finalResults
     };
   }
+}
+
+function neo4jObj (query, cypher_params, results, err) {
+  return {
+    query: query,
+    params: cypher_params,
+    results: _cleanResults(results),
+    err: err
+  };
 }
 
 /* Cypher
