@@ -69,6 +69,7 @@ var _parseUserWithFriends = function (result) {
 
 // returns a user and their friends
 var _singleUserWithFriends = function (results, callback) {
+  if (!results.length) return callback();
   callback(null, _parseUserWithFriends(results[0]));
 };
 
