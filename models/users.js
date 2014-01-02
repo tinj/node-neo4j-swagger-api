@@ -8,7 +8,7 @@ var _ = require('underscore');
 var uuid = require('hat'); // generates uuids
 var Cypher = require('../neo4j/cypher');
 var User = require('../models/neo4j/user');
-var async = require('async');
+// var async = require('async');
 var randomName = require('random-name');
 
 
@@ -125,7 +125,7 @@ var _singleCount = function (results, callback) {
  */
 
 
-var _matchBy = function (keys, params, options, callback) {
+var _matchBy = function (keys, params, callback) {
   var cypher_params = _.pick(params, keys);
 
   var query = [
@@ -142,7 +142,7 @@ var _matchByName = _.partial(_matchBy, ['name']);
 var _matchAll = _.partial(_matchBy, []);
 
 // gets n random users
-var _getRandom = function (params, options, callback) {
+var _getRandom = function (params, callback) {
   var cypher_params = {
     n: parseInt(params.n || 1)
   };
@@ -158,7 +158,7 @@ var _getRandom = function (params, options, callback) {
 };
 
 // gets n random users with friends
-var _getRandomWithFriends = function (params, options, callback) {
+var _getRandomWithFriends = function (params, callback) {
   var cypher_params = {
     n: parseInt(params.n || 1)
   };
@@ -176,7 +176,7 @@ var _getRandomWithFriends = function (params, options, callback) {
 };
 
 
-var _getAllCount = function (params, options, callback) {
+var _getAllCount = function (params, callback) {
   var cypher_params = {};
 
   var query = [
@@ -187,7 +187,7 @@ var _getAllCount = function (params, options, callback) {
   callback(null, query, cypher_params);
 };
 
-var _updateName = function (params, options, callback) {
+var _updateName = function (params, callback) {
   var cypher_params = {
     id : params.id,
     name : params.name
@@ -203,7 +203,7 @@ var _updateName = function (params, options, callback) {
 };
 
 // creates the user with cypher
-var _create = function (params, options, callback) {
+var _create = function (params, callback) {
   var cypher_params = {
     id: params.id || uuid(),
     name: params.name
@@ -222,7 +222,7 @@ var _create = function (params, options, callback) {
 };
 
 // creates many users with cypher
-// var _createMany = function (params, options, callback) {
+// var _createMany = function (params, callback) {
 //   var users = _.map(params.users, function (user) {
 //     return {
 //       id: user.id || uuid(),
@@ -247,7 +247,7 @@ var _create = function (params, options, callback) {
 // };
 
 // delete the user and any relationships with cypher
-var _delete = function (params, options, callback) {
+var _delete = function (params, callback) {
   var cypher_params = {
     id: params.id
   };
@@ -261,7 +261,7 @@ var _delete = function (params, options, callback) {
 };
 
 // delete all users
-var _deleteAll = function (params, options, callback) {
+var _deleteAll = function (params, callback) {
   var cypher_params = {};
 
   var query = [
@@ -274,7 +274,7 @@ var _deleteAll = function (params, options, callback) {
 
 
 // friend the user
-var _friend = function (params, options, callback) {
+var _friend = function (params, callback) {
   var cypher_params = {
     id: params.id,
     friend_id: params.friend_id
@@ -290,7 +290,7 @@ var _friend = function (params, options, callback) {
 };
 
 // friend random user
-var _friendRandom = function (params, options, callback) {
+var _friendRandom = function (params, callback) {
   var cypher_params = {
     id: params.id,
     n: params.n
@@ -309,7 +309,7 @@ var _friendRandom = function (params, options, callback) {
 };
 
 // unfriend the user
-var _unfriend = function (params, options, callback) {
+var _unfriend = function (params, callback) {
   var cypher_params = {
     id: params.id,
     friend_id: params.friend_id
@@ -324,7 +324,7 @@ var _unfriend = function (params, options, callback) {
 };
 
 // match with friends
-var _matchWithFriends = function (params, options, callback) {
+var _matchWithFriends = function (params, callback) {
   var cypher_params = {
     id: params.id
   };
@@ -338,7 +338,7 @@ var _matchWithFriends = function (params, options, callback) {
 };
 
 // match with friends and friends of friends (FOF)
-var _matchWithFriendsAndFOF = function (params, options, callback) {
+var _matchWithFriendsAndFOF = function (params, callback) {
   var cypher_params = {
     id: params.id
   };
@@ -354,7 +354,7 @@ var _matchWithFriendsAndFOF = function (params, options, callback) {
 };
 
 // match with friends of friends (FOF)
-var _matchWithFOF = function (params, options, callback) {
+var _matchWithFOF = function (params, callback) {
   var cypher_params = {
     id: params.id
   };
@@ -370,7 +370,7 @@ var _matchWithFOF = function (params, options, callback) {
 };
 
 // match all with friends
-var _matchAllWithFriends = function (params, options, callback) {
+var _matchAllWithFriends = function (params, callback) {
   var cypher_params = {};
 
   var query = [
@@ -387,64 +387,64 @@ var _matchAllWithFriends = function (params, options, callback) {
 
 
 // get a single user by id
-var getById = Cypher(_matchByUUID, _singleUser);
+var getById = new Cypher().query(_matchByUUID).results(_singleUser);
 
 // get a single user by name
-var getByName = Cypher(_matchByName, _singleUser);
+var getByName = new Cypher().query(_matchByName).results(_singleUser);
 
 // get n random users
-var getRandom = Cypher(_getRandom, _manyUsers);
+var getRandom = new Cypher().query(_getRandom).results(_manyUsers);
 
 // get n random users
-var getRandomWithFriends = Cypher(_getRandomWithFriends, _manyUsersWithFriends);
+var getRandomWithFriends = new Cypher().query(_getRandomWithFriends).results(_manyUsersWithFriends);
 
 // get a user by id and update their name
-var updateName = Cypher(_updateName, _singleUser);
+var updateName = new Cypher(_updateName, _singleUser);
 
 // create a new user
-var create = Cypher(_create, _singleUser);
+var create = new Cypher(_create, _singleUser);
 
-// create many new users
-var createMany = function (params, options, callback) {
+var createManySetup = function (params, callback) {
   if (params.names && _.isArray(params.names)) {
-    async.map(params.names, function (name, callback) {
-      create({name: name}, options, callback);
-    }, function (err, responses) {
-      Cypher.mergeReponses(err, responses, callback);
-    });
+    callback(null, _.map(params.names, function (name) {
+      return {name: name};
+    }));
   } else if (params.users && _.isArray(params.users)) {
-    async.map(params.users, function (user, callback) {
-      create(_.pick(user, 'name', 'id'), options, callback);
-    }, function (err, responses) {
-      Cypher.mergeReponses(err, responses, callback);
-    });
+    callback(null, _.map(params.users, function (user) {
+      return _.pick(user, 'name', 'id');
+    }));
   } else {
     callback(null, []);
   }
 };
 
-var createRandom = function (params, options, callback) {
+// create many new users
+var createMany = new Cypher().setup(createManySetup).map(create);
+
+var createRandomSetup = function (params, callback) {
   var names = _randomNames(params.n || 1);
-  createMany({names: names}, options, callback);
+  callback(null, {names: names});
 };
+
+var createRandom = new Cypher().setup(createRandomSetup).cypher(createMany);
 
 // login a user
 var login = create;
 
 // get all users
-var getAll = Cypher(_matchAll, _manyUsers);
+var getAll = new Cypher(_matchAll, _manyUsers);
 
 // get all users count
-var getAllCount = Cypher(_getAllCount, _singleCount);
+var getAllCount = new Cypher().query(_getAllCount).results(_singleCount);
 
 // friend a user by id
-var friendUser = Cypher(_friend, _singleUserWithFriend);
+var friendUser = new Cypher().query(_friend).results(_singleUserWithFriend);
 
 // friend random users
-var friendRandomUser = Cypher(_friendRandom, _singleUserWithFriends);
+var friendRandomUser = new Cypher(_friendRandom, _singleUserWithFriends);
 
 // creates n new friendships between users
-var manyFriendships = function (params, options, callback) {
+var assignManyFriendships = function (params, callback) {
   // number of friendships to create
   var friendships = parseInt(params.friendships || params.n || 1, 10);
 
@@ -460,98 +460,94 @@ var manyFriendships = function (params, options, callback) {
   // randomly distribute friendships between users
   while (length && friendships>0) {
     friendships--;
-    users[Math.floor(Math.random()*length)].n++;
+    _.sample(users).n++;
   }
 
   users = _.filter(users, function (user) {
     return user.n > 0;
   });
-
-  // this should be syncronous if we want to ensure no duplicates/deadlocks
-  async.mapSeries(users, function (user, callback) {
-    friendRandomUser(user, options, callback);
-  }, function (err, responses) {
-    Cypher.mergeReponses(err, responses, callback);
-  });
+  callback(null, users);
 };
 
+var manyFriendships = new Cypher().setup(assignManyFriendships).mapSeries(friendRandomUser);
+
 // creates many friendships between random users
-var manyRandomFriendships = function (params, options, callback) {
-  getRandom(params, options, function (err, response) {
+var manyRandomFriendships = function (params, callback) {
+  getRandom(params, function (err, response) {
     if (err) return callback(err, response);
     manyFriendships({
       users: response.results,
       friendships: params.friendships || params.n
-    }, options, function (err, finalResponse) {
+    }, function (err, finalResponse) {
       Cypher.mergeRaws(err, [response, finalResponse], callback);
     });
   });
 };
 
-// unfriend a user by id
-var unfriendUser = Cypher(_unfriend, _singleUserWithFriend);
-
-// delete a user by id
-var deleteUser = Cypher(_delete);
-
-// delete a user by id
-var deleteAllUsers = Cypher(_deleteAll);
-
-// reset all users
-var resetUsers = function (params, options, callback) {
-  deleteAllUsers(null, options, function (err, response) {
-    if (err) return callback(err, response);
-    createRandom(params, options, function (err, secondResponse) {
-      if (err) return Cypher.mergeRaws(err, [response, secondResponse], callback);
-      manyFriendships({
-        users: secondResponse.results,
-        friendships: params.friendships
-      }, options, function (err, finalResponse) {
-        // this doesn't return all the users, just the ones with friends
-        Cypher.mergeRaws(err, [response, secondResponse, finalResponse], callback);
-      });
-    });
+// merge initParams and params
+var manyFriendshipsSetup = function (initParams, params, callback) {
+  callback(null, {
+    users: params,
+    friendships: initParams.friendships || initParams.n
   });
 };
 
+var manyRandomFriendships = new Cypher().cypher(getRandom).setup(manyFriendshipsSetup, true).cypher(manyFriendships, true);
+
+// unfriend a user by id
+var unfriendUser = new Cypher(_unfriend, _singleUserWithFriend);
+
+// delete a user by id
+var deleteUser = new Cypher(_delete);
+
+// delete a user by id
+var deleteAllUsers = new Cypher(_deleteAll);
+
+// reset all users
+var resetUsers = new Cypher().cypher(deleteAllUsers)
+                              .params()
+                              .cypher(createRandom)
+                              .setup(manyFriendshipsSetup, true)
+                              .cypher(manyFriendships);
+
 // get a single user by id and all friends
-var getWithFriends = Cypher(_matchWithFriends, _singleUserWithFriends);
+var getWithFriends = new Cypher(_matchWithFriends, _singleUserWithFriends);
 
 // get a single user by id and all friends and friends of friends
-var getWithFriendsAndFOF = Cypher(_matchWithFriendsAndFOF, _singleUserWithFriendsAndFOF);
+var getWithFriendsAndFOF = new Cypher(_matchWithFriendsAndFOF, _singleUserWithFriendsAndFOF);
 
 // get a single user by id and all friends of friends
-var getWithFOF = Cypher(_matchWithFOF, _singleUserWithFOF);
+var getWithFOF = new Cypher(_matchWithFOF, _singleUserWithFOF);
 
 // get all users and all friends
-var getAllWithFriends = Cypher(_matchAllWithFriends, _manyUsersWithFriends);
+var getAllWithFriends = new Cypher(_matchAllWithFriends, _manyUsersWithFriends);
 
 
 
 // export exposed functions
 
 module.exports = {
-  getById: getById,
-  getByName: getByName,
-  getRandom: getRandom,
-  getRandomWithFriends: getRandomWithFriends,
-  updateName: updateName,
-  create: create,
-  createMany: createMany,
-  createRandom: createRandom,
-  login: login,
-  getAll: getAll,
-  getAllCount: getAllCount,
-  friendUser: friendUser,
-  friendRandomUser: friendRandomUser,
-  manyFriendships: manyFriendships,
-  manyRandomFriendships: manyRandomFriendships,
-  unfriendUser: unfriendUser,
-  deleteUser: deleteUser,
-  deleteAllUsers: deleteAllUsers,
-  resetUsers: resetUsers,
-  getWithFriends: getWithFriends,
-  getWithFriendsAndFOF: getWithFriendsAndFOF,
-  getWithFOF: getWithFOF,
-  getAllWithFriends: getAllWithFriends
+  getById: getById.fn(),
+  getByName: getByName.fn(),
+  getRandom: getRandom.fn(),
+  getRandomWithFriends: getRandomWithFriends.fn(),
+  updateName: updateName.fn(),
+  create: create.fn(),
+  createMany: createMany.fn(),
+  createRandom: createRandom.fn(),
+  login: login.fn(),
+  getAll: getAll.fn(),
+  getAllCount: getAllCount.fn(),
+  friendUser: friendUser.fn(),
+  friendRandomUser: friendRandomUser.fn(),
+  manyFriendships: manyFriendships.fn(),
+  manyRandomFriendships: manyRandomFriendships.fn(),
+  unfriendUser: unfriendUser.fn(),
+  deleteUser: deleteUser.fn(),
+  deleteAllUsers: deleteAllUsers.fn(),
+  resetUsers: resetUsers.fn(),
+  getWithFriends: getWithFriends.fn(),
+  getWithFriendsAndFOF: getWithFriendsAndFOF.fn(),
+  getWithFOF: getWithFOF.fn(),
+  getAllWithFriends: getAllWithFriends.fn()
 };
