@@ -1,19 +1,4 @@
 module.exports = {
-  "Envelope":{
-    "id":"Envelope",
-    "properties":{
-      "response":[
-        "User",
-        "Pet",
-        "List[User]",
-        "List[Pet]",
-      ],
-      "responseTime":"integer",
-      "name":{
-        "type":"string"
-      }
-    }
-  },
   "Category":{
     "id":"Category",
     "properties":{
@@ -79,13 +64,16 @@ module.exports = {
     // "required": ["id"],
     "properties":{
       "id":{
-        "type":"string"
+        "type":"string",
+        "description": "UUID"
       },
       "name":{
-        "type":"string"
+        "type":"string",
+        "description": "Name of User"
       },
       "created":{
-        "type":"number"
+        "type":"integer",
+        "description":"Unix Time Created"
       }
     }
   },

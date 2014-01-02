@@ -58,8 +58,6 @@ app.configure(function () {
 // Set the main handler in swagger to the express subpath
 swagger.setAppHandler(subpath);
 
-swagger.configureSwaggerPaths("", "/api-docs", "");
-
 // This is a sample validator.  It simply says that for _all_ POST, DELETE, PUT
 // methods, the header `api_key` OR query param `api_key` must be equal
 // to the string literal `special-key`.  All other HTTP ops are A-OK
@@ -110,7 +108,30 @@ swagger.addModels(models)
 
 // Configures the app's base path and api version.
 console.log(BASE_URL+API_STRING);
-swagger.configure(BASE_URL+API_STRING, "0.0.10");
+
+swagger.configureDeclaration("users", {
+  description: "User Operations",
+  // authorizations: ["oath2"],
+  produces: ["application/json"]
+});
+
+// set api info
+swagger.setApiInfo({
+  title: "Neo4j-Swagger API",
+  description: "This a sample server built on top of Neo4j, a graph database. The neo4j toggle (<b>top right</b>) controls whether the underlying neo4j cypher queries are returned to the client. Learn more at <a href=\"https://github.com/tinj/node-neo4j-swagger-api\">https://github.com/tinj/node-neo4j-swagger-api</a>",
+  contact: "mat@tinj.com"
+});
+
+swagger.setAuthorizations({
+  apiKey: {
+    type: "apiKey",
+    passAs: "header"
+  }
+});
+
+swagger.configureSwaggerPaths("", "api-docs", "");
+
+swagger.configure(BASE_URL+API_STRING, "0.1.0");
 
 
 // Routes

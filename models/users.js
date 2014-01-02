@@ -6,7 +6,7 @@
 
 var _ = require('underscore');
 var uuid = require('hat'); // generates uuids
-var Cypher = require('../neo4j/cypher');
+var Construct = require('neo4j-architect');
 var User = require('../models/neo4j/user');
 // var async = require('async');
 var randomName = require('random-name');
@@ -130,7 +130,7 @@ var _matchBy = function (keys, params, callback) {
 
   var query = [
     'MATCH (user:User)',
-    Cypher.where('user', keys),
+    Construct.where('user', keys),
     'RETURN user'
   ].join('\n');
 
@@ -387,22 +387,22 @@ var _matchAllWithFriends = function (params, callback) {
 
 
 // get a single user by id
-var getById = new Cypher().query(_matchByUUID).results(_singleUser);
+var getById = new Construct().query(_matchByUUID).then(_singleUser);
 
 // get a single user by name
-var getByName = new Cypher().query(_matchByName).results(_singleUser);
+var getByName = new Construct().query(_matchByName).then(_singleUser);
 
 // get n random users
-var getRandom = new Cypher().query(_getRandom).results(_manyUsers);
+var getRandom = new Construct().query(_getRandom).then(_manyUsers);
 
 // get n random users
-var getRandomWithFriends = new Cypher().query(_getRandomWithFriends).results(_manyUsersWithFriends);
+var getRandomWithFriends = new Construct().query(_getRandomWithFriends).then(_manyUsersWithFriends);
 
 // get a user by id and update their name
-var updateName = new Cypher(_updateName, _singleUser);
+var updateName = new Construct(_updateName, _singleUser);
 
 // create a new user
-var create = new Cypher(_create, _singleUser);
+var create = new Construct(_create, _singleUser);
 
 var createManySetup = function (params, callback) {
   if (params.names && _.isArray(params.names)) {
@@ -419,29 +419,29 @@ var createManySetup = function (params, callback) {
 };
 
 // create many new users
-var createMany = new Cypher().setup(createManySetup).map(create);
+var createMany = new Construct().then(createManySetup).map(create);
 
 var createRandomSetup = function (params, callback) {
   var names = _randomNames(params.n || 1);
   callback(null, {names: names});
 };
 
-var createRandom = new Cypher().setup(createRandomSetup).cypher(createMany);
+var createRandom = new Construct().then(createRandomSetup).then(createMany);
 
 // login a user
 var login = create;
 
 // get all users
-var getAll = new Cypher(_matchAll, _manyUsers);
+var getAll = new Construct(_matchAll, _manyUsers);
 
 // get all users count
-var getAllCount = new Cypher().query(_getAllCount).results(_singleCount);
+var getAllCount = new Construct().query(_getAllCount).then(_singleCount);
 
 // friend a user by id
-var friendUser = new Cypher().query(_friend).results(_singleUserWithFriend);
+var friendUser = new Construct().query(_friend).then(_singleUserWithFriend);
 
 // friend random users
-var friendRandomUser = new Cypher(_friendRandom, _singleUserWithFriends);
+var friendRandomUser = new Construct(_friendRandom, _singleUserWithFriends);
 
 // creates n new friendships between users
 var assignManyFriendships = function (params, callback) {
@@ -469,20 +469,7 @@ var assignManyFriendships = function (params, callback) {
   callback(null, users);
 };
 
-var manyFriendships = new Cypher().setup(assignManyFriendships).mapSeries(friendRandomUser);
-
-// creates many friendships between random users
-var manyRandomFriendships = function (params, callback) {
-  getRandom(params, function (err, response) {
-    if (err) return callback(err, response);
-    manyFriendships({
-      users: response.results,
-      friendships: params.friendships || params.n
-    }, function (err, finalResponse) {
-      Cypher.mergeRaws(err, [response, finalResponse], callback);
-    });
-  });
-};
+var manyFriendships = new Construct().then(assignManyFriendships).mapSeries(friendRandomUser);
 
 // merge initParams and params
 var manyFriendshipsSetup = function (initParams, params, callback) {
@@ -492,35 +479,36 @@ var manyFriendshipsSetup = function (initParams, params, callback) {
   });
 };
 
-var manyRandomFriendships = new Cypher().cypher(getRandom).setup(manyFriendshipsSetup, true).cypher(manyFriendships, true);
+// creates many friendships between random users
+var manyRandomFriendships = new Construct().then(getRandom).then(manyFriendshipsSetup, true).then(manyFriendships, true);
 
 // unfriend a user by id
-var unfriendUser = new Cypher(_unfriend, _singleUserWithFriend);
+var unfriendUser = new Construct(_unfriend, _singleUserWithFriend);
 
 // delete a user by id
-var deleteUser = new Cypher(_delete);
+var deleteUser = new Construct(_delete);
 
 // delete a user by id
-var deleteAllUsers = new Cypher(_deleteAll);
+var deleteAllUsers = new Construct(_deleteAll);
 
 // reset all users
-var resetUsers = new Cypher().cypher(deleteAllUsers)
+var resetUsers = new Construct().then(deleteAllUsers)
                               .params()
-                              .cypher(createRandom)
-                              .setup(manyFriendshipsSetup, true)
-                              .cypher(manyFriendships);
+                              .then(createRandom)
+                              .then(manyFriendshipsSetup, true)
+                              .then(manyFriendships);
 
 // get a single user by id and all friends
-var getWithFriends = new Cypher(_matchWithFriends, _singleUserWithFriends);
+var getWithFriends = new Construct(_matchWithFriends, _singleUserWithFriends);
 
 // get a single user by id and all friends and friends of friends
-var getWithFriendsAndFOF = new Cypher(_matchWithFriendsAndFOF, _singleUserWithFriendsAndFOF);
+var getWithFriendsAndFOF = new Construct(_matchWithFriendsAndFOF, _singleUserWithFriendsAndFOF);
 
 // get a single user by id and all friends of friends
-var getWithFOF = new Cypher(_matchWithFOF, _singleUserWithFOF);
+var getWithFOF = new Construct(_matchWithFOF, _singleUserWithFOF);
 
 // get all users and all friends
-var getAllWithFriends = new Cypher(_matchAllWithFriends, _manyUsersWithFriends);
+var getAllWithFriends = new Construct(_matchAllWithFriends, _manyUsersWithFriends);
 
 
 

@@ -10,12 +10,26 @@ var swe = sw.errors;
 var _ = require('underscore');
 
 
+var swm = {
+  deleted: function (name, res) {
+    var msg = {
+      code: 200,
+      message: "deleted "+name
+    };
+    if (!res) {
+      return msg;
+    } else {
+      res.send(msg.code, msg);
+    }
+  }
+};
+
 /*
  *  Util Functions
  */
 
 function setHeaders (res, queries, start) {
-  sw.setHeaders(res);
+  // sw.setHeaders(res);
   res.header('Duration-ms', new Date() - start);
   if (queries) {
     res.header('Neo4j', JSON.stringify(queries));
@@ -24,7 +38,7 @@ function setHeaders (res, queries, start) {
 
 function writeResponse (res, results, queries, start) {
   setHeaders(res, queries, start);
-  res.send(JSON.stringify(results));
+  res.send(results);
 }
 
 function parseUrl(req, key) {
@@ -44,14 +58,18 @@ exports.list = {
   spec: {
     description : "List all users",
     path : "/users",
-    notes : "Returns all users",
-    summary : "Find all users",
     method: "GET",
-    params : [
-      param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true")
+    summary : "Find all users",
+    notes : "Returns all users",
+    type: "array",
+    items: {
+      $ref: "User"
+    },
+    produces: ["application/json"],
+    paramaters : [
+      param.query("friends", "Include friends", "boolean", false, ["true", "false"], "true")
     ],
-    responseClass : "List[User]",
-    errorResponses : [swe.notFound('users')],
+    responseMessages: [swe.notFound('users')],
     nickname : "getUsers"
   },
   action: function (req, res) {
@@ -81,9 +99,9 @@ exports.userCount = {
     notes : "User count",
     summary : "User count",
     method: "GET",
-    params : [],
-    responseClass : "Count",
-    errorResponses : [swe.notFound('users')],
+    parameters : [],
+    type : "Count",
+    responseMessages : [swe.notFound('users')],
     nickname : "userCount"
   },
   action: function (req, res) {
@@ -104,11 +122,14 @@ exports.addUser = {
     notes : "adds a user to the graph",
     summary : "Add a new user to the graph",
     method: "POST",
-    responseClass : "List[User]",
-    params : [
-      param.query("name", "User name, seperate multiple names by commas", "string", true, true)
+    type : "array",
+    items : {
+      $ref: "User"
+    },
+    parameters : [
+      param.query("name", "User name, seperate multiple names by commas", "string", true)
     ],
-    errorResponses : [swe.invalid('input')],
+    responseMessages : [swe.invalid('input')],
     nickname : "addUser"
   },
   action: function(req, res) {
@@ -137,11 +158,14 @@ exports.addRandomUsers = {
     notes : "adds many random users to the graph",
     summary : "Add many random new users to the graph",
     method: "POST",
-    responseClass : "List[User]",
-    params : [
+    type : "array",
+    items : {
+      $ref: "User"
+    },
+    parameters : [
       param.path("n", "Number of random users to be created", "integer", null, 1)
     ],
-    errorResponses : [swe.invalid('input')],
+    responseMessages : [swe.invalid('input')],
     nickname : "addRandomUsers"
   },
   action: function(req, res) {
@@ -169,13 +193,13 @@ exports.findById = {
     notes : "Returns a user based on ID",
     summary : "Find user by ID",
     method: "GET",
-    params : [
+    parameters : [
       param.path("id", "ID of user that needs to be fetched", "string"),
-      param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true"),
-      param.query("fof", "Include friends of friends", "boolean", false, false, "LIST[true, false]")
+      param.query("friends", "Include friends", "boolean", false, ["true", "false"], "true"),
+      param.query("fof", "Include friends of friends", "boolean", false, ["true", "false"])
     ],
-    responseClass : "User",
-    errorResponses : [swe.invalid('id'), swe.notFound('user')],
+    type : "User",
+    responseMessages : [swe.invalid('id'), swe.notFound('user')],
     nickname : "getUserById"
   },
   action: function (req,res) {
@@ -195,7 +219,7 @@ exports.findById = {
 
     var callback = function (err, results, queries) {
       if (err) throw swe.notFound('user');
-      writeResponse2(res, results, queries, start);
+      writeResponse(res, results, queries, start);
     };
 
     if (friends) {
@@ -219,12 +243,12 @@ exports.getRandom = {
     notes : "Returns n random users",
     summary : "get random users",
     method: "GET",
-    params : [
+    parameters : [
       param.path("n", "Number of random users get", "integer", null, 1),
-      param.query("friends", "Include friends", "boolean", false, false, "LIST[true, false]", "true")
+      param.query("friends", "Include friends", "boolean", false, ["true", "false"], "true")
     ],
-    responseClass : "User",
-    errorResponses : [swe.invalid('id'), swe.notFound('user')],
+    type : "User",
+    responseMessages : [swe.invalid('id'), swe.notFound('user')],
     nickname : "getRandomUsers"
   },
   action: function (req,res) {
@@ -256,11 +280,11 @@ exports.updateUser = {
     notes : "updates a user name",
     method: "PUT",
     summary : "Update an existing user",
-    params : [
+    parameters : [
       param.path("id", "ID of user that needs to be fetched", "string"),
       param.query("name", "New user name", "string", true)
     ],
-    errorResponses : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
+    responseMessages : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
     nickname : "updateUser"
   },
   action: function(req, res) {
@@ -292,10 +316,14 @@ exports.deleteUser = {
     notes : "removes a user from the db",
     method: "DELETE",
     summary : "Remove an existing user",
-    params : [
+    parameters : [
       param.path("id", "ID of user that needs to be removed", "string")
     ],
-    errorResponses : [swe.invalid('id'), swe.notFound('user')],
+    responseMessages : [
+      swm.deleted('user'),
+      swe.invalid('id'),
+      swe.notFound('user')
+    ],
     nickname : "deleteUser"
   },
   action: function(req, res) {
@@ -307,9 +335,12 @@ exports.deleteUser = {
     var start = new Date();
 
     Users.deleteUser({id: id}, options, function (err, results, queries) {
-      if (err) throw swe.invalid('user');
       setHeaders(res, queries, start);
-      res.send(200);
+      if (err) throw swe.invalid('user');
+      console.log(swm.deleted('user'));
+      // throw swm.deleted('user');
+      swm.deleted('user', res);
+      // res.send(200,"Deleted");
     });
   }
 };
@@ -321,15 +352,15 @@ exports.deleteAllUsers = {
     notes : "removes all users from the db",
     method: "DELETE",
     summary : "Removes all users",
-    errorResponses : [swe.invalid('user')],
     responseMessages:[
       {
         code: 200,
         message: "Deleted"
-      }
+      },
+      swe.invalid('user')
     ],
-    params : [],
-    // responseClass: 'code', // does this work?
+    parameters : [],
+    // type: 'code', // does this work?
     nickname : "deleteAllUsers"
   },
   action: function(req, res) {
@@ -351,11 +382,14 @@ exports.resetUsers = {
     notes : "Resets the graph with new users and friendships",
     method: "PUT",
     summary : "Removes all users and then adds n random users",
-    errorResponses : [swe.invalid('user'), swe.invalid('input')],
-    responseClass : "List[User]",
-    params : [
-      param.query("n", "Number of random users to be created", "integer", null, null, null, 10),
-      param.query("f", "Average number of friendships per user", "integer", false, null, "LIST[0,1,2,3]", "2")
+    responseMessages : [swe.invalid('user'), swe.invalid('input')],
+    type : "array",
+    items : {
+      $ref: "User"
+    },
+    parameters : [
+      param.query("n", "Number of random users to be created", "integer", null, null, 10),
+      param.query("f", "Average number of friendships per user", "integer", false, ["0","1","2","3"], "2")
     ],
     nickname : "resetUsers"
   },
@@ -381,11 +415,11 @@ exports.friendUser = {
     notes : "friends a user by ID",
     method: "POST",
     summary : "Friend an existing user",
-    params : [
+    parameters : [
       param.path("id", "ID of the user", "string"),
       param.path("friend_id", "ID of the user to be friended", "string")
     ],
-    errorResponses : [swe.invalid('id'), swe.invalid('friend_id'), swe.notFound('user'), swe.invalid('input')],
+    responseMessages : [swe.invalid('id'), swe.invalid('friend_id'), swe.notFound('user'), swe.invalid('input')],
     nickname : "friendUser"
   },
   action: function(req, res) {
@@ -420,10 +454,10 @@ exports.manyRandomFriendships = {
     notes : "creates n random friendships",
     method: "POST",
     summary : "create many random friendships",
-    params : [
+    parameters : [
       param.path("n", "Number of random users", "integer", null, "1")
     ],
-    errorResponses : [swe.notFound('users')],
+    responseMessages : [swe.notFound('users')],
     nickname : "manyRandomFriendships"
   },
   action: function(req, res) {
@@ -448,11 +482,11 @@ exports.friendRandomUser = {
     notes : "friends a random user",
     method: "POST",
     summary : "Friend an existing user",
-    params : [
+    parameters : [
       param.path("id", "ID of the user", "string"),
       param.path("n", "Number of new friends", "integer", "LIST[1,2,3,4,5]", "1")
     ],
-    errorResponses : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
+    responseMessages : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
     nickname : "friendRandomUser"
   },
   action: function(req, res) {
@@ -483,11 +517,11 @@ exports.unfriendUser = {
     notes : "unfriend a user by ID",
     method: "POST",
     summary : "Unfriend an existing user",
-    params : [
+    parameters : [
       param.path("id", "ID of the user", "string"),
       param.path("friend_id", "ID of the user to be unfriended", "string")
     ],
-    errorResponses : [swe.invalid('id'), swe.invalid('friend_id'), swe.notFound('user'), swe.invalid('input')],
+    responseMessages : [swe.invalid('id'), swe.invalid('friend_id'), swe.notFound('user'), swe.invalid('input')],
     nickname : "unfriendUser"
   },
   action: function(req, res) {
