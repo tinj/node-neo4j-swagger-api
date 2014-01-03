@@ -119,6 +119,7 @@ swagger.configureDeclaration("users", {
 swagger.setApiInfo({
   title: "Neo4j-Swagger API",
   description: "This a sample server built on top of Neo4j, a graph database. The neo4j toggle (<b>top right</b>) controls whether the underlying neo4j cypher queries are returned to the client. Learn more at <a href=\"https://github.com/tinj/node-neo4j-swagger-api\">https://github.com/tinj/node-neo4j-swagger-api</a>",
+  todo: "Add graph visualizations! (help wanted)",
   contact: "mat@tinj.com"
 });
 

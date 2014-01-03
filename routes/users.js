@@ -66,7 +66,7 @@ exports.list = {
       $ref: "User"
     },
     produces: ["application/json"],
-    paramaters : [
+    parameters : [
       param.query("friends", "Include friends", "boolean", false, ["true", "false"], "true")
     ],
     responseMessages: [swe.notFound('users')],

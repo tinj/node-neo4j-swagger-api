@@ -6,7 +6,10 @@
 
 var _ = require('underscore');
 var uuid = require('hat'); // generates uuids
-var Construct = require('neo4j-architect');
+var Architect = require('neo4j-architect');
+Architect.init();
+var Construct = Architect.Construct;
+var Cypher = Architect.Cypher;
 var User = require('../models/neo4j/user');
 // var async = require('async');
 var randomName = require('random-name');
@@ -130,7 +133,7 @@ var _matchBy = function (keys, params, callback) {
 
   var query = [
     'MATCH (user:User)',
-    Construct.where('user', keys),
+    Cypher.where('user', keys),
     'RETURN user'
   ].join('\n');
 

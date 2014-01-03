@@ -34,7 +34,7 @@
     "underscore.string": ">=2.3.3",
     "swagger-node-express": "git+https://github.com/wordnik/swagger-node-express/",
     "neo4j-swagger-ui": ">=0.0.14",
-    "neo4j-architect": ">=0.0.3",
+    "neo4j-architect": ">=0.0.5",
     "colors": "0.6.x",
     "async": ">=0.2.9",
     "moment": ">=2.4.0",
