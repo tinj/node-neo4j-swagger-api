@@ -27,7 +27,6 @@ function _randomNames (n) {
   return _.times(n, _randomName);
 }
 
-
 /**
  *  Result Functions
  *  to be combined with queries using _.partial()
@@ -260,6 +259,9 @@ var _delete = function (params, callback) {
     'OPTIONAL MATCH (user)-[r]-()',
     'DELETE user, r',
   ].join('\n');
+
+  // add confirmation?
+
   callback(null, query, cypher_params);
 };
 
@@ -390,16 +392,16 @@ var _matchAllWithFriends = function (params, callback) {
 
 
 // get a single user by id
-var getById = new Construct().query(_matchByUUID).then(_singleUser);
+var getById = new Construct(_matchByUUID).query().then(_singleUser);
 
 // get a single user by name
-var getByName = new Construct().query(_matchByName).then(_singleUser);
+var getByName = new Construct(_matchByName).query().then(_singleUser);
 
 // get n random users
-var getRandom = new Construct().query(_getRandom).then(_manyUsers);
+var getRandom = new Construct(_getRandom).query().then(_manyUsers);
 
 // get n random users
-var getRandomWithFriends = new Construct().query(_getRandomWithFriends).then(_manyUsersWithFriends);
+var getRandomWithFriends = new Construct(_getRandomWithFriends).query().then(_manyUsersWithFriends);
 
 // get a user by id and update their name
 var updateName = new Construct(_updateName, _singleUser);
@@ -407,7 +409,7 @@ var updateName = new Construct(_updateName, _singleUser);
 // create a new user
 var create = new Construct(_create, _singleUser);
 
-var createManySetup = function (params, callback) {
+var _createManySetup = function (params, callback) {
   if (params.names && _.isArray(params.names)) {
     callback(null, _.map(params.names, function (name) {
       return {name: name};
@@ -422,14 +424,14 @@ var createManySetup = function (params, callback) {
 };
 
 // create many new users
-var createMany = new Construct().then(createManySetup).map(create);
+var createMany = new Construct(_createManySetup).map(create);
 
-var createRandomSetup = function (params, callback) {
+var _createRandomSetup = function (params, callback) {
   var names = _randomNames(params.n || 1);
   callback(null, {names: names});
 };
 
-var createRandom = new Construct().then(createRandomSetup).then(createMany);
+var createRandom = new Construct(_createRandomSetup).then(createMany);
 
 // login a user
 var login = create;
@@ -438,16 +440,17 @@ var login = create;
 var getAll = new Construct(_matchAll, _manyUsers);
 
 // get all users count
-var getAllCount = new Construct().query(_getAllCount).then(_singleCount);
+// var getAllCount = new Construct().query(_getAllCount).then(_singleCount);
+var getAllCount = new Construct(_getAllCount).query().then(_singleCount);
 
 // friend a user by id
-var friendUser = new Construct().query(_friend).then(_singleUserWithFriend);
+var friendUser = new Construct(_friend).query().then(_singleUserWithFriend);
 
 // friend random users
 var friendRandomUser = new Construct(_friendRandom, _singleUserWithFriends);
 
 // creates n new friendships between users
-var assignManyFriendships = function (params, callback) {
+var _assignManyFriendships = function (params, callback) {
   // number of friendships to create
   var friendships = parseInt(params.friendships || params.n || 1, 10);
 
@@ -472,18 +475,18 @@ var assignManyFriendships = function (params, callback) {
   callback(null, users);
 };
 
-var manyFriendships = new Construct().then(assignManyFriendships).mapSeries(friendRandomUser);
+var manyFriendships = new Construct(_assignManyFriendships).mapSeries(friendRandomUser);
 
 // merge initParams and params
-var manyFriendshipsSetup = function (initParams, params, callback) {
+var _manyFriendshipsSetup = function (params, callback) {
   callback(null, {
     users: params,
-    friendships: initParams.friendships || initParams.n
+    friendships: this.params.friendships || this.params.n
   });
 };
 
 // creates many friendships between random users
-var manyRandomFriendships = new Construct().then(getRandom).then(manyFriendshipsSetup, true).then(manyFriendships, true);
+var manyRandomFriendships = new Construct(getRandom).then(_manyFriendshipsSetup).then(manyFriendships);
 
 // unfriend a user by id
 var unfriendUser = new Construct(_unfriend, _singleUserWithFriend);
@@ -495,10 +498,10 @@ var deleteUser = new Construct(_delete);
 var deleteAllUsers = new Construct(_deleteAll);
 
 // reset all users
-var resetUsers = new Construct().then(deleteAllUsers)
+var resetUsers = new Construct(deleteAllUsers)
                               .params()
                               .then(createRandom)
-                              .then(manyFriendshipsSetup, true)
+                              .then(_manyFriendshipsSetup)
                               .then(manyFriendships);
 
 // get a single user by id and all friends
@@ -518,27 +521,27 @@ var getAllWithFriends = new Construct(_matchAllWithFriends, _manyUsersWithFriend
 // export exposed functions
 
 module.exports = {
-  getById: getById.fn(),
-  getByName: getByName.fn(),
-  getRandom: getRandom.fn(),
-  getRandomWithFriends: getRandomWithFriends.fn(),
-  updateName: updateName.fn(),
-  create: create.fn(),
-  createMany: createMany.fn(),
-  createRandom: createRandom.fn(),
-  login: login.fn(),
-  getAll: getAll.fn(),
-  getAllCount: getAllCount.fn(),
-  friendUser: friendUser.fn(),
-  friendRandomUser: friendRandomUser.fn(),
-  manyFriendships: manyFriendships.fn(),
-  manyRandomFriendships: manyRandomFriendships.fn(),
-  unfriendUser: unfriendUser.fn(),
-  deleteUser: deleteUser.fn(),
-  deleteAllUsers: deleteAllUsers.fn(),
-  resetUsers: resetUsers.fn(),
-  getWithFriends: getWithFriends.fn(),
-  getWithFriendsAndFOF: getWithFriendsAndFOF.fn(),
-  getWithFOF: getWithFOF.fn(),
-  getAllWithFriends: getAllWithFriends.fn()
+  getById: getById.done(),
+  getByName: getByName.done(),
+  getRandom: getRandom.done(),
+  getRandomWithFriends: getRandomWithFriends.done(),
+  updateName: updateName.done(),
+  create: create.done(),
+  createMany: createMany.done(),
+  createRandom: createRandom.done(),
+  login: login.done(),
+  getAll: getAll.done(),
+  getAllCount: getAllCount.done(),
+  friendUser: friendUser.done(),
+  friendRandomUser: friendRandomUser.done(),
+  manyFriendships: manyFriendships.done(),
+  manyRandomFriendships: manyRandomFriendships.done(),
+  unfriendUser: unfriendUser.done(),
+  deleteUser: deleteUser.done(),
+  deleteAllUsers: deleteAllUsers.done(),
+  resetUsers: resetUsers.done(),
+  getWithFriends: getWithFriends.done(),
+  getWithFriendsAndFOF: getWithFriendsAndFOF.done(),
+  getWithFOF: getWithFOF.done(),
+  getAllWithFriends: getAllWithFriends.done()
 };

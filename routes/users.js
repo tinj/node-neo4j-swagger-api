@@ -241,7 +241,7 @@ exports.getRandom = {
     description : "get random users",
     path : "/users/random/{n}",
     notes : "Returns n random users",
-    summary : "get random users",
+    summary : "Get random users",
     method: "GET",
     parameters : [
       param.path("n", "Number of random users get", "integer", null, 1),
@@ -369,9 +369,10 @@ exports.deleteAllUsers = {
     };
     var start = new Date();
     Users.deleteAllUsers(null, options, function (err, results, queries) {
-      if (err) throw swe.invalid('user');
       setHeaders(res, queries, start);
-      res.send(200);
+      if (err) throw swe.invalid('user');
+      // res.send(200);
+      swm.deleted('users', res);
     });
   }
 };
@@ -408,6 +409,41 @@ exports.resetUsers = {
   }
 };
 
+
+exports.friendRandomUser = {
+  spec: {
+    path : "/users/{id}/friend/random/{n}",
+    notes : "friends a random user",
+    method: "POST",
+    summary : "Randomly friend an existing user",
+    parameters : [
+      param.path("id", "ID of the user", "string"),
+      param.path("n", "Number of new friends", "integer", ["1","2","3","4","5"], "1")
+    ],
+    responseMessages : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
+    nickname : "friendRandomUser"
+  },
+  action: function(req, res) {
+    var options = {
+      neo4j: parseBool(req, 'neo4j')
+    };
+    var start = new Date();
+    var id = req.params.id;
+    var n = parseInt(req.params.n) || 1;
+    if (!id) {
+      throw swe.invalid('user');
+    }
+    var params = {
+      id: id,
+      n: n
+    };
+    Users.friendRandomUser(params, options, function (err, results, queries) {
+      if (err) throw swe.invalid('id');
+      if (!results) throw swe.invalid('user');
+      writeResponse(res, results, queries, start);
+    });
+  }
+};
 
 exports.friendUser = {
   spec: {
@@ -453,7 +489,7 @@ exports.manyRandomFriendships = {
     path : "/users/random/friend/{n}",
     notes : "creates n random friendships",
     method: "POST",
-    summary : "create many random friendships",
+    summary : "Create many random friendships",
     parameters : [
       param.path("n", "Number of random users", "integer", null, "1")
     ],
@@ -476,40 +512,6 @@ exports.manyRandomFriendships = {
   }
 };
 
-exports.friendRandomUser = {
-  spec: {
-    path : "/users/{id}/friend/random/{n}",
-    notes : "friends a random user",
-    method: "POST",
-    summary : "Friend an existing user",
-    parameters : [
-      param.path("id", "ID of the user", "string"),
-      param.path("n", "Number of new friends", "integer", "LIST[1,2,3,4,5]", "1")
-    ],
-    responseMessages : [swe.invalid('id'), swe.notFound('user'), swe.invalid('input')],
-    nickname : "friendRandomUser"
-  },
-  action: function(req, res) {
-    var options = {
-      neo4j: parseBool(req, 'neo4j')
-    };
-    var start = new Date();
-    var id = req.params.id;
-    var n = parseInt(req.params.n) || 1;
-    if (!id) {
-      throw swe.invalid('user');
-    }
-    var params = {
-      id: id,
-      n: n
-    };
-    Users.friendRandomUser(params, options, function (err, results, queries) {
-      if (err) throw swe.invalid('id');
-      if (!results) throw swe.invalid('user');
-      writeResponse(res, results, queries, start);
-    });
-  }
-};
 
 exports.unfriendUser = {
   spec: {
