@@ -265,6 +265,14 @@ var _delete = function (params, callback) {
   callback(null, query, cypher_params);
 };
 
+// var __delete = new Cypher()
+//                     .params('id')
+//                     .match({label: 'User', name: 'user', props: 'id'})
+//                     .optional('(user)-[r]-()')
+//                     .delete(['user','r']);
+
+// var ___delete = Cypher.deleteNode({label: 'User', name: 'user', params: 'id'});
+
 // delete all users
 var _deleteAll = function (params, callback) {
   var cypher_params = {};
