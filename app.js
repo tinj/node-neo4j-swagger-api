@@ -131,7 +131,7 @@ swagger.setAuthorizations({
 
 swagger.configureSwaggerPaths("", "api-docs", "");
 
-swagger.configure(BASE_URL+API_STRING, "0.1.0");
+swagger.configure(BASE_URL+API_STRING, "0.1.4");
 
 
 // Routes
